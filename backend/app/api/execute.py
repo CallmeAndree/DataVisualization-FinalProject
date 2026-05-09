@@ -21,7 +21,9 @@ async def execute(payload: ExecuteRequest) -> ExecuteResponse:
         raise HTTPException(status_code=404, detail="Không tìm thấy request_id")
 
     ai_code = row.get("ai_code") or ""
-    was_edited = payload.code != ai_code
+    request_code = _normalize_code(payload.code)
+    stored_code = _normalize_code(ai_code)
+    was_edited = request_code != stored_code and request_code != _normalize_code_json_escaped(ai_code)
     if was_edited:
         await update_request_edit(payload.request_id, payload.code, True)
 
@@ -52,3 +54,13 @@ async def execute(payload: ExecuteRequest) -> ExecuteResponse:
         execution_time_ms=result.get("execution_time_ms", 0),
         error_message=result.get("error_message"),
     )
+
+
+def _normalize_code(code: str) -> str:
+    """Normalize transport-only differences before edit detection."""
+    return code.replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
+def _normalize_code_json_escaped(code: str) -> str:
+    """Normalize code after clients accidentally send JSON-escaped newlines."""
+    return _normalize_code(code.replace("\\n", "\n").replace("\\r", "\r"))

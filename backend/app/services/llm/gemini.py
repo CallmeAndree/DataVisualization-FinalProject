@@ -108,14 +108,18 @@ class GeminiClient(LLMClient):
             )
 
             accumulated_text = ""
+            last_parsed: dict[str, str] | None = None
             async for chunk in response:
                 chunk_text = getattr(chunk, "text", "") or ""
                 if chunk_text:
                     accumulated_text += chunk_text
-                    # Try to parse accumulated text
                     parsed = _parse_response(accumulated_text)
-                    # Yield JSON-encoded chunk
-                    yield json.dumps(parsed, ensure_ascii=False)
+                    if parsed.get("code"):
+                        last_parsed = parsed
+                        yield json.dumps(parsed, ensure_ascii=False)
+
+            if last_parsed is None:
+                yield json.dumps(_parse_response(accumulated_text), ensure_ascii=False)
 
         except Exception as e:
             # Yield error as JSON

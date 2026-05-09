@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CHART_PALETTE, formatPercent } from "@/lib/constants";
+import { chartColor, chartPaletteColor, CHART_CHROME, formatPercent } from "@/lib/constants";
 
 interface AreaConfig {
   key: string;
@@ -60,27 +60,27 @@ export function StackedAreaChart({
         onClick={handleClick}
         style={{ cursor: onYearClick ? "pointer" : "default" }}
       >
-        <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke={CHART_CHROME.grid} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={pct ? (v) => `${Math.round(v * 100)}%` : undefined}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
           width={48}
         />
         <Tooltip
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
+            background: CHART_CHROME.tooltipBg,
+            border: `1px solid ${CHART_CHROME.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 13,
-            color: "#212121",
+            color: CHART_CHROME.tooltipText,
           }}
           formatter={(v) => (pct ? formatPercent(v as number) : v)}
         />
@@ -88,11 +88,11 @@ export function StackedAreaChart({
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
+            <span style={{ fontSize: 12, color: CHART_CHROME.legend }}>{value}</span>
           )}
         />
         {areas.map((a, index) => {
-          const color = a.color ?? CHART_PALETTE[index % CHART_PALETTE.length];
+          const color = chartColor(a.color, chartPaletteColor(index));
           return (
             <Area
               key={a.key}

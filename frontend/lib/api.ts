@@ -83,51 +83,63 @@ export type ShortFormData = {
 };
 
 export type ChannelsData = {
-  /** Box plot: view/video per category */
-  c1_box: { category: string; values: number[] }[];
-  /** Scatter: subscriber_count vs avg_views */
-  c2_scatter: {
-    channel_name: string;
-    subscriber_count: number;
-    avg_views: number;
-    video_count: number;
-    category: string;
-  }[];
+  /** RO2 B1: duration distribution normalized within each category */
+  b1_duration_distribution: { category: string; short: number; medium: number; long: number }[];
+  /** RO2 B2: median engagement_rate by category × duration group */
+  b2_engagement_heatmap: { categories: string[]; durations: string[]; z: number[][] };
 };
 
 export type AnomalyData = {
-  /** Scatter: view_count vs like_view_ratio with suspect flag */
-  d1_scatter: {
-    title: string;
-    channel: string;
-    view_count: number;
-    like_view_ratio: number;
-    suspect_fake_view: boolean;
+  /** RO4 B1: viral count and viral rate by category */
+  d1_viral_by_category: {
+    category: string;
+    viral_count: number;
+    viral_rate: number;
+    total_videos: number;
   }[];
-  /** Top viral videos table */
-  d2_viral: {
-    rank: number;
-    title: string;
-    channel: string;
-    view_count: number;
-    is_viral: boolean;
-  }[];
+  /** RO4 B2: per-channel viral momentum and global baseline */
+  d2_viral_momentum: {
+    points: {
+      channel_id: string;
+      channel_name: string;
+      category: string;
+      momentum_rate: number;
+      n_viral_events: number;
+    }[];
+    baseline_all: number;
+  };
 };
 
 export type InteractionData = {
-  /** Box: engagement_rate by duration_group × subscriber_tier */
-  e1_box: { label: string; tier: string; values: number[] }[];
-  /** Heatmap: day_of_week × hour_posted → avg view_count */
+  /** RO3 B2/E1: video counts by hour, one field per category */
+  e1_hour_category_video_count: ({ hour: number } & Record<string, number>)[];
+  /** RO3 B1/E2: day_of_week × hour_posted → median view_count */
   e2_heatmap: { days: string[]; hours: number[]; z: number[][] };
+  categories: string[];
 };
 
 export type EconomyData = {
-  /** Line: commercial video count by month */
-  f1_line: { month: string; count: number }[];
-  /** Bar: avg view commercial vs non-commercial by category */
-  f2_bar: { category: string; commercial: number; non_commercial: number }[];
-  /** Top 10 commercial channels */
-  top_commercial_channels: { channel_name: string; commercial_count: number }[];
+  /** RO5 B1: subscriber count vs average engagement rate */
+  f1_subscriber_engagement_scatter: {
+    channel_name: string;
+    category: string;
+    subscriber_count: number;
+    avg_engagement_rate: number;
+    total_view_count: number;
+  }[];
+  /** RO5 B2: channel strategy quadrant */
+  f2_strategy_quadrant: {
+    points: {
+      channel_name: string;
+      category: string;
+      video_count_dataset: number;
+      avg_views_per_video_dataset: number;
+      subscriber_count: number;
+    }[];
+    median_x: number;
+    median_y: number;
+  };
+  categories: string[];
 };
 
 // ── AI / Execute types ────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { chartColor, chartPaletteColor, CHART_CHROME, formatNumber } from "@/lib/constants";
 
 interface BarConfig {
   key: string;
@@ -45,20 +45,20 @@ export function BarChart({
         layout={isHorizontal ? "vertical" : "horizontal"}
         margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
       >
-        <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" horizontal={!isHorizontal} vertical={isHorizontal} />
+        <CartesianGrid stroke={CHART_CHROME.grid} strokeDasharray="3 3" horizontal={!isHorizontal} vertical={isHorizontal} />
         {isHorizontal ? (
           <>
             <XAxis
               type="number"
               tickFormatter={yFormatter}
-              tick={{ fontSize: 12, fill: "#93939f" }}
+              tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey={xKey}
-              tick={{ fontSize: 12, fill: "#93939f" }}
+              tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
               axisLine={false}
               tickLine={false}
               width={80}
@@ -68,13 +68,13 @@ export function BarChart({
           <>
             <XAxis
               dataKey={xKey}
-              tick={{ fontSize: 12, fill: "#93939f" }}
+              tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               tickFormatter={yFormatter}
-              tick={{ fontSize: 12, fill: "#93939f" }}
+              tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
               axisLine={false}
               tickLine={false}
               width={52}
@@ -83,11 +83,11 @@ export function BarChart({
         )}
         <Tooltip
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
+            background: CHART_CHROME.tooltipBg,
+            border: `1px solid ${CHART_CHROME.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 13,
-            color: "#212121",
+            color: CHART_CHROME.tooltipText,
           }}
           formatter={(v) => yFormatter(v as number)}
         />
@@ -95,7 +95,7 @@ export function BarChart({
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
+            <span style={{ fontSize: 12, color: CHART_CHROME.legend }}>{value}</span>
           )}
         />
         {bars.map((b, index) => (
@@ -103,7 +103,7 @@ export function BarChart({
             key={b.key}
             dataKey={b.key}
             name={b.label ?? b.key}
-            fill={b.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+            fill={chartColor(b.color, chartPaletteColor(index))}
             radius={isHorizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]}
           />
         ))}

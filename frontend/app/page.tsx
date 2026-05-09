@@ -9,7 +9,7 @@ import { ChartCard } from "@/components/charts/ChartCard";
 import { PieDonut } from "@/components/charts/PieDonut";
 import { LineChart } from "@/components/charts/LineChart";
 import { StackedAreaChart } from "@/components/charts/StackedAreaChart";
-import { CHART_PALETTE, formatNumber, labelCategory } from "@/lib/constants";
+import { CHART_PALETTE, DURATION_COLORS, formatNumber, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
 import { applyFilters } from "@/lib/utils/filterUtils";
 import { calculateKPIs } from "@/lib/utils/kpiUtils";
@@ -165,7 +165,7 @@ function OverviewContent() {
           <LineChart
             data={filteredA2Data}
             xKey="year"
-            lines={[{ key: "total_views", label: "Lượt xem", color: CHART_PALETTE[3] }]}
+            lines={[{ key: "total_views", label: "Lượt xem", color: CHART_PALETTE[1] }]}
             yFormatter={formatNumber}
             selectedYear={filters.year}
             onYearClick={(year) => updateFilter("year", year)}
@@ -186,8 +186,8 @@ function OverviewContent() {
             }))}
             xKey="year"
             areas={[
-              { key: "short", label: "Video ngắn", color: CHART_PALETTE[7], stackId: "ratio" },
-              { key: "long", label: "Video dài", color: CHART_PALETTE[5], stackId: "ratio" },
+              { key: "short", label: "Video ngắn", color: DURATION_COLORS.Short, stackId: "ratio" },
+              { key: "long", label: "Video dài", color: DURATION_COLORS.Long, stackId: "ratio" },
             ]}
             pct
             selectedYear={filters.year}

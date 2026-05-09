@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { chartColor, chartPaletteColor, CHART_CHROME, REFERENCE_COLORS, formatNumber } from "@/lib/constants";
 
 interface LineConfig {
   key: string;
@@ -64,27 +64,27 @@ export function LineChart({
         onClick={handleClick}
         style={{ cursor: onYearClick ? "pointer" : "default" }}
       >
-        <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke={CHART_CHROME.grid} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={yFormatter}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
           width={52}
         />
         <Tooltip
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
+            background: CHART_CHROME.tooltipBg,
+            border: `1px solid ${CHART_CHROME.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 13,
-            color: "#212121",
+            color: CHART_CHROME.tooltipText,
           }}
           formatter={(v) => yFormatter(v as number)}
         />
@@ -92,19 +92,19 @@ export function LineChart({
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
+            <span style={{ fontSize: 12, color: CHART_CHROME.legend }}>{value}</span>
           )}
         />
         {referenceLine != null && (
           <ReferenceLine
             x={referenceLine}
-            stroke={CHART_PALETTE[7]}
+            stroke={REFERENCE_COLORS.neutral}
             strokeDasharray="4 4"
-            label={{ value: referenceLabel ?? "", fill: CHART_PALETTE[7], fontSize: 11 }}
+            label={{ value: referenceLabel ?? "", fill: REFERENCE_COLORS.neutral, fontSize: 11 }}
           />
         )}
         {lines.map((l, index) => {
-          const color = l.color ?? CHART_PALETTE[index % CHART_PALETTE.length];
+          const color = chartColor(l.color, chartPaletteColor(index));
           return (
             <Line
               key={l.key}
@@ -121,11 +121,11 @@ export function LineChart({
                     cy={props.cy}
                     r={isSelected ? 6 : 0}
                     fill={color}
-                    stroke="#fff"
+                    stroke={CHART_CHROME.markerStroke}
                     strokeWidth={2}
                     className="transition-all duration-300"
                     style={{
-                      filter: isSelected ? "drop-shadow(0 0 4px rgba(0,0,0,0.3))" : "none",
+                      filter: isSelected ? `drop-shadow(0 0 4px ${REFERENCE_COLORS.selectedShadow})` : "none",
                     }}
                   />
                 );
@@ -133,7 +133,7 @@ export function LineChart({
               activeDot={{
                 r: 5,
                 fill: color,
-                stroke: "#fff",
+                stroke: CHART_CHROME.markerStroke,
                 strokeWidth: 2,
               }}
             />

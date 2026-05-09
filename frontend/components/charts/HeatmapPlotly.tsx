@@ -6,6 +6,7 @@
  */
 import dynamic from "next/dynamic";
 import type { PlotParams } from "react-plotly.js";
+import { HEATMAP_COLORSCALE, CHART_CHROME } from "@/lib/constants";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<PlotParams>;
 
@@ -13,7 +14,7 @@ interface HeatmapPlotlyProps {
   z: number[][];
   x: string[];
   y: string[];
-  colorscale?: string;
+  colorscale?: [number, string][];
   xLabel?: string;
   yLabel?: string;
   height?: number;
@@ -24,7 +25,7 @@ export function HeatmapPlotly({
   z,
   x,
   y,
-  colorscale = "Greens_r",
+  colorscale = HEATMAP_COLORSCALE,
   xLabel,
   yLabel,
   height = 340,
@@ -45,20 +46,20 @@ export function HeatmapPlotly({
         } as Plotly.Data,
       ]}
       layout={{
-        paper_bgcolor: "#ffffff",
-        plot_bgcolor: "#f9fafb",
+        paper_bgcolor: CHART_CHROME.paper,
+        plot_bgcolor: CHART_CHROME.plot,
         height,
         margin: { t: 8, r: 8, b: 60, l: 100 },
-        font: { family: "Inter, Arial, sans-serif", size: 12, color: "#212121" },
+        font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         xaxis: {
           title: xLabel ? { text: xLabel } : undefined,
           showgrid: false,
-          tickfont: { size: 11, color: "#93939f" },
+          tickfont: { size: 11, color: CHART_CHROME.axis },
         },
         yaxis: {
           title: yLabel ? { text: yLabel } : undefined,
           showgrid: false,
-          tickfont: { size: 11, color: "#93939f" },
+          tickfont: { size: 11, color: CHART_CHROME.axis },
           automargin: true,
         },
 

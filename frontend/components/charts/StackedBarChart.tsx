@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CHART_PALETTE, formatNumber } from "@/lib/constants";
+import { chartColor, chartPaletteColor, CHART_CHROME, formatNumber } from "@/lib/constants";
 
 interface BarConfig {
   key: string;
@@ -31,27 +31,27 @@ export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-        <CartesianGrid stroke="#f2f2f2" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke={CHART_CHROME.grid} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={formatNumber}
-          tick={{ fontSize: 12, fill: "#93939f" }}
+          tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
           width={48}
         />
         <Tooltip
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
+            background: CHART_CHROME.tooltipBg,
+            border: `1px solid ${CHART_CHROME.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 13,
-            color: "#212121",
+            color: CHART_CHROME.tooltipText,
           }}
           formatter={(v) => formatNumber(v as number)}
         />
@@ -59,7 +59,7 @@ export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
+            <span style={{ fontSize: 12, color: CHART_CHROME.legend }}>{value}</span>
           )}
         />
         {bars.map((b, index) => (
@@ -68,7 +68,7 @@ export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
             dataKey={b.key}
             name={b.label ?? b.key}
             stackId="stack"
-            fill={b.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+            fill={chartColor(b.color, chartPaletteColor(index))}
             radius={[2, 2, 0, 0]}
           />
         ))}

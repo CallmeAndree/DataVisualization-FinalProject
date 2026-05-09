@@ -88,7 +88,7 @@ export function ResultPanel({
   if (!hasContent) {
     return (
       <Card className="border-dashed">
-        <CardContent className="flex h-32 items-center justify-center text-zinc-500">
+        <CardContent className="flex h-32 items-center justify-center text-[#75758a]">
           Chưa có kết quả. Nhấn Duyệt để chạy mã.
         </CardContent>
       </Card>
@@ -98,12 +98,12 @@ export function ResultPanel({
   return (
     <div className="space-y-4">
       {error_message && (
-        <Card className="border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-900/10">
+        <Card className="border-[#b30000]/30 bg-[#eeece7]">
           <CardContent className="pt-6">
-            <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+            <p className="text-sm font-semibold text-[#b30000]">
               Lỗi thực thi:
             </p>
-            <pre className="mt-2 whitespace-pre-wrap font-mono text-xs text-red-600 dark:text-red-300">
+            <pre className="mt-2 whitespace-pre-wrap font-mono text-xs text-[#b30000]">
               {error_message}
             </pre>
           </CardContent>
@@ -139,10 +139,10 @@ export function ResultPanel({
       {stdout && (
         <Card>
           <CardContent className="pt-6">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#93939f]">
               Kết quả đầu ra
             </p>
-            <pre className="max-h-64 overflow-auto rounded bg-zinc-900 p-3 font-mono text-xs leading-relaxed text-zinc-100">
+            <pre className="max-h-64 overflow-auto rounded bg-[#17171c] p-3 font-mono text-xs leading-relaxed text-white">
               {stdout}
             </pre>
           </CardContent>
@@ -150,7 +150,7 @@ export function ResultPanel({
       )}
 
       {execution_time_ms !== null && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[#93939f]">
           Thực thi trong {execution_time_ms}ms
         </p>
       )}

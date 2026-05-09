@@ -6,13 +6,14 @@
  */
 import dynamic from "next/dynamic";
 import type { PlotParams } from "react-plotly.js";
-import { CHART_PALETTE } from "@/lib/constants";
+import { chartColor, chartPaletteColor, CHART_CHROME, REFERENCE_COLORS } from "@/lib/constants";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<PlotParams>;
 
 interface BoxTrace {
   name: string;
   y: number[];
+  text?: string[];
   color?: string;
 }
 
@@ -21,39 +22,82 @@ interface BoxPlotlyProps {
   title?: string;
   yLabel?: string;
   height?: number;
+  showPoints?: boolean;
+  baseline?: number;
+  baselineLabel?: string;
+  percent?: boolean;
 }
 
-export function BoxPlotly({ traces, yLabel, height = 320 }: BoxPlotlyProps) {
+export function BoxPlotly({
+  traces,
+  yLabel,
+  height = 320,
+  showPoints = false,
+  baseline,
+  baselineLabel = "Baseline",
+  percent = false,
+}: BoxPlotlyProps) {
   return (
     <Plot
-      data={traces.map((t, index) => ({
+      data={traces.map((t, index) => {
+        const color = chartColor(t.color, chartPaletteColor(index));
+
+        return ({
         type: "box",
         name: t.name,
         y: t.y,
-        boxmean: true,
-        marker: { color: t.color ?? CHART_PALETTE[index % CHART_PALETTE.length], opacity: 0.8 },
-        line: { color: t.color ?? CHART_PALETTE[index % CHART_PALETTE.length] },
-        fillcolor: t.color ? `${t.color}30` : `${CHART_PALETTE[index % CHART_PALETTE.length]}30`,
-      } as Plotly.Data))}
+        text: t.text,
+        boxmean: showPoints ? "sd" : true,
+        boxpoints: showPoints ? "all" : false,
+        jitter: showPoints ? 0.35 : 0,
+        pointpos: showPoints ? 0 : undefined,
+        hovertemplate: percent
+          ? "%{x}<br>%{text}<br>%{y:.2%}<extra></extra>"
+          : "%{x}<br>%{text}<br>%{y}<extra></extra>",
+        marker: { color, opacity: 0.75, size: 6 },
+        line: { color },
+        fillcolor: `${color}30`,
+      } as Plotly.Data);
+      })}
       layout={{
-        paper_bgcolor: "#ffffff",
-        plot_bgcolor: "#f9fafb",
+        paper_bgcolor: CHART_CHROME.paper,
+        plot_bgcolor: CHART_CHROME.plot,
         height,
         margin: { t: 8, r: 8, b: 60, l: 60 },
-        font: { family: "Inter, Arial, sans-serif", size: 12, color: "#212121" },
+        font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         showlegend: false,
         xaxis: {
           showgrid: false,
-          tickfont: { size: 11, color: "#93939f" },
+          tickfont: { size: 11, color: CHART_CHROME.axis },
           automargin: true,
         },
         yaxis: {
           title: yLabel ? { text: yLabel } : undefined,
           showgrid: true,
-          gridcolor: "#f2f2f2",
-          tickfont: { size: 11, color: "#93939f" },
+          gridcolor: CHART_CHROME.grid,
+          tickfont: { size: 11, color: CHART_CHROME.axis },
+          tickformat: percent ? ".0%" : undefined,
           automargin: true,
         },
+        shapes: baseline != null ? [{
+          type: "line",
+          xref: "paper",
+          x0: 0,
+          x1: 1,
+          y0: baseline,
+          y1: baseline,
+          line: { color: REFERENCE_COLORS.viral, width: 2, dash: "dash" },
+        }] : undefined,
+        annotations: baseline != null ? [{
+          xref: "paper",
+          x: 1,
+          y: baseline,
+          xanchor: "right",
+          yanchor: "bottom",
+          text: baselineLabel,
+          showarrow: false,
+          font: { size: 11, color: REFERENCE_COLORS.viral },
+        }] : undefined,
       }}
       config={{ responsive: true, displayModeBar: false }}
       style={{ width: "100%" }}

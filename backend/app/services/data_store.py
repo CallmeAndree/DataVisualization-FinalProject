@@ -13,6 +13,56 @@ CHANNELS_CSV = DATA_DIR / "channels_processed.csv"
 _videos: pd.DataFrame | None = None
 _channels: pd.DataFrame | None = None
 
+CATEGORY_ORDER = ["Comedy", "Kids", "Music", "Sports", "News", "Education", "Gaming", "Vlog"]
+DURATION_ORDER = ["Short", "Medium", "Long"]
+DAY_NAMES_VI = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+
+
+def _ordered_categories(values: pd.Series | list[Any]) -> list[str]:
+    seen = {str(v) for v in pd.Series(values).dropna().tolist()}
+    ordered = [cat for cat in CATEGORY_ORDER if cat in seen]
+    extras = sorted(seen - set(ordered))
+    return ordered + extras
+
+
+def _ordered_category_frame(df: pd.DataFrame, column: str = "category") -> pd.DataFrame:
+    if df.empty or column not in df.columns:
+        return df
+    order = {cat: idx for idx, cat in enumerate(CATEGORY_ORDER)}
+    return (
+        df.assign(_category_order=df[column].map(lambda x: order.get(str(x), len(order))))
+        .sort_values(["_category_order", column])
+        .drop(columns=["_category_order"])
+    )
+
+
+def _to_bool_series(series: pd.Series) -> pd.Series:
+    if pd.api.types.is_bool_dtype(series):
+        return series.fillna(False).astype(bool)
+    if pd.api.types.is_numeric_dtype(series):
+        return series.fillna(0).astype(float) != 0
+    normalized = series.astype(str).str.strip().str.lower()
+    return normalized.isin(["true", "1", "yes", "y", "viral"])
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if pd.isna(value):
+            return default
+        out = float(value)
+        return out if not (np.isnan(out) or np.isinf(out)) else default
+    except Exception:
+        return default
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        if pd.isna(value):
+            return default
+        return int(value)
+    except Exception:
+        return default
+
 
 def load() -> None:
     global _videos, _channels
@@ -322,54 +372,49 @@ def _compute_pivot_channels(v: pd.DataFrame) -> list[dict[str, Any]]:
 def get_channels_data(
     category: str | None = None, tier: str | None = None
 ) -> dict[str, Any]:
-    v, c = _require_loaded()
-    df = c.copy()
+    v, _ = _require_loaded()
+    df = v.copy()
     if category:
         df = df[df["channel_category"] == category]
-    if tier:
-        df = df[df["subscriber_tier"] == tier]
 
-    # C1: Box plot data - raw values per category for Plotly to calculate box stats
-    c1_box: list[dict[str, Any]] = []
-    if "avg_views_per_video" in df.columns:
-        for cat, sub in df.groupby("channel_category", dropna=True):
-            vals = sub["avg_views_per_video"].dropna().tolist()
-            if vals:
-                c1_box.append({
-                    "category": cat,
-                    "values": vals
-                })
+    categories = _ordered_categories(df["channel_category"] if "channel_category" in df.columns else [])
 
-    # C2: Scatter plot data
-    c2_cols = [
-        "channel_id",
-        "channel_name",
-        "channel_category",
-        "subscriber_count",
-        "avg_views_per_video",
-        "subscriber_tier",
-        "video_count"
-    ]
-    c2_existing = [col for col in c2_cols if col in df.columns]
-    c2_records = _records(df[c2_existing])
+    b1_duration_distribution: list[dict[str, Any]] = []
+    if {"channel_category", "duration_group"}.issubset(df.columns):
+        counts = (
+            df[df["duration_group"].isin(DURATION_ORDER)]
+            .groupby(["channel_category", "duration_group"], dropna=True)
+            .size()
+            .reset_index(name="count")
+        )
+        for cat in categories:
+            row: dict[str, Any] = {"category": cat, "short": 0.0, "medium": 0.0, "long": 0.0}
+            sub = counts[counts["channel_category"] == cat]
+            total = float(sub["count"].sum())
+            if total > 0:
+                for duration in DURATION_ORDER:
+                    count = sub.loc[sub["duration_group"] == duration, "count"].sum()
+                    row[duration.lower()] = float(count / total)
+            b1_duration_distribution.append(row)
 
-    # Rename fields to match frontend expectations
-    c2_scatter = []
-    for rec in c2_records:
-        c2_scatter.append({
-            "channel_name": rec.get("channel_name"),
-            "subscriber_count": rec.get("subscriber_count"),
-            "avg_views": rec.get("avg_views_per_video"),
-            "video_count": rec.get("video_count"),
-            "category": rec.get("channel_category")
-        })
-
-    median_by_year = _compute_median_by_year(v, category=category)
+    b2_engagement_heatmap = {"categories": categories, "durations": DURATION_ORDER, "z": []}
+    if {"channel_category", "duration_group", "engagement_rate"}.issubset(df.columns):
+        pivot = (
+            df[df["duration_group"].isin(DURATION_ORDER)]
+            .pivot_table(
+                index="channel_category",
+                columns="duration_group",
+                values="engagement_rate",
+                aggfunc="median",
+                fill_value=0,
+            )
+            .reindex(index=categories, columns=DURATION_ORDER, fill_value=0)
+        )
+        b2_engagement_heatmap["z"] = pivot.values.tolist()
 
     return {
-        "c1_box": c1_box,
-        "c2_scatter": c2_scatter,
-        "median_by_year": median_by_year,
+        "b1_duration_distribution": b1_duration_distribution,
+        "b2_engagement_heatmap": b2_engagement_heatmap,
     }
 
 
@@ -406,121 +451,110 @@ def get_anomaly(
     df = v.copy()
     if channel_id:
         df = df[df["channel_id"] == channel_id]
-    if year_from is not None:
+    if year_from is not None and "year" in df.columns:
         df = df[df["year"] >= year_from]
-    if year_to is not None:
+    if year_to is not None and "year" in df.columns:
         df = df[df["year"] <= year_to]
 
-    # D1: Scatter plot data
-    d1_cols = [
-        "title",
-        "channel_name",
-        "view_count",
-        "like_view_ratio",
-        "suspect_fake_view",
-    ]
-    d1_existing = [col for col in d1_cols if col in df.columns]
-    d1_df = df[d1_existing].dropna(subset=["view_count", "like_view_ratio"], how="any")
-    if len(d1_df) > 1000:
-        d1_df = d1_df.sample(n=1000, random_state=42)
-
-    d1_scatter = []
-    for _, row in d1_df.iterrows():
-        d1_scatter.append({
-            "title": row.get("title"),
-            "channel": row.get("channel_name"),
-            "view_count": int(row.get("view_count", 0)),
-            "like_view_ratio": float(row.get("like_view_ratio", 0)),
-            "suspect_fake_view": bool(row.get("suspect_fake_view", False))
-        })
-
-    # D2: Top viral videos
     if "is_viral" in df.columns:
-        viral = df[df["is_viral"] == True]  # noqa: E712
+        df = df.assign(_is_viral_bool=_to_bool_series(df["is_viral"]))
     else:
-        viral = df.nlargest(15, "view_count") if "view_count" in df.columns else df
+        df = df.assign(_is_viral_bool=False)
 
-    d2_cols = ["title", "channel_name", "view_count", "is_viral"]
-    d2_existing = [col for col in d2_cols if col in df.columns]
-    d2_df = viral[d2_existing].sort_values("view_count", ascending=False).head(15)
+    d1_viral_by_category: list[dict[str, Any]] = []
+    if "channel_category" in df.columns:
+        grouped = (
+            df.groupby("channel_category", dropna=True)["_is_viral_bool"]
+            .agg(viral_count="sum", viral_rate="mean", total_videos="count")
+            .reset_index()
+            .rename(columns={"channel_category": "category"})
+        )
+        grouped = _ordered_category_frame(grouped)
+        d1_viral_by_category = [
+            {
+                "category": str(row["category"]),
+                "viral_count": int(row["viral_count"]),
+                "viral_rate": float(row["viral_rate"]),
+                "total_videos": int(row["total_videos"]),
+            }
+            for _, row in grouped.iterrows()
+        ]
 
-    d2_viral = []
-    for idx, row in enumerate(d2_df.iterrows(), start=1):
-        _, data = row
-        d2_viral.append({
-            "rank": idx,
-            "title": data.get("title"),
-            "channel": data.get("channel_name"),
-            "view_count": int(data.get("view_count", 0)),
-            "is_viral": bool(data.get("is_viral", False))
-        })
+    momentum_points: list[dict[str, Any]] = []
+    if {"channel_id", "channel_name", "channel_category"}.issubset(df.columns):
+        sort_col = "_published_dt" if "_published_dt" in df.columns else "published_at"
+        work = df.copy()
+        if sort_col == "published_at":
+            work["_published_sort"] = pd.to_datetime(work["published_at"], errors="coerce", utc=True)
+            sort_col = "_published_sort"
+        for channel_id_value, grp in work.groupby("channel_id", dropna=True):
+            grp = grp.sort_values(sort_col).reset_index(drop=True)
+            viral_positions = grp.index[grp["_is_viral_bool"] == True].tolist()  # noqa: E712
+            rates: list[float] = []
+            for pos in viral_positions:
+                next_10 = grp.iloc[pos + 1 : pos + 11]["_is_viral_bool"]
+                rates.append(float(next_10.sum()) / 10.0)
+            if rates:
+                momentum_points.append({
+                    "channel_id": str(channel_id_value),
+                    "channel_name": str(grp["channel_name"].iloc[0]),
+                    "category": str(grp["channel_category"].iloc[0]),
+                    "momentum_rate": float(np.mean(rates)),
+                    "n_viral_events": int(len(viral_positions)),
+                })
+
+    momentum_points.sort(key=lambda r: (CATEGORY_ORDER.index(r["category"]) if r["category"] in CATEGORY_ORDER else len(CATEGORY_ORDER), r["channel_name"]))
 
     return {
-        "d1_scatter": d1_scatter,
-        "d2_viral": d2_viral,
+        "d1_viral_by_category": d1_viral_by_category,
+        "d2_viral_momentum": {
+            "points": momentum_points,
+            "baseline_all": float(df["_is_viral_bool"].mean()) if len(df) else 0.0,
+        },
     }
 
 
 def get_interaction(
     categories: list[str] | None = None, duration_group: str | None = None
 ) -> dict[str, Any]:
-    v, c = _require_loaded()
+    v, _ = _require_loaded()
     df = v.copy()
     if categories:
         df = df[df["channel_category"].isin(categories)]
     if duration_group:
         df = df[df["duration_group"] == duration_group]
 
-    # Join with channels to get subscriber_tier
-    if "channel_id" in df.columns and "subscriber_tier" in c.columns:
-        tier_map = c.set_index("channel_id")["subscriber_tier"]
-        df = df.assign(subscriber_tier=df["channel_id"].map(tier_map))
-
-    # E1: Box plot data - raw values for each duration_group × tier combination
-    e1_box: list[dict[str, Any]] = []
-    if "engagement_rate" in df.columns and "duration_group" in df.columns:
-        for (dg, tier), sub in df.groupby(["duration_group", "subscriber_tier"], dropna=True):
-            vals = sub["engagement_rate"].dropna().tolist()
-            if vals:
-                e1_box.append({
-                    "label": str(dg),
-                    "tier": str(tier),
-                    "values": vals
-                })
-
-    # E2: Heatmap of day_of_week × hour_posted
-    e2_heatmap = {"days": [], "hours": [], "z": []}
-    if "_published_dt" in df.columns:
+    e2_heatmap = {"days": DAY_NAMES_VI, "hours": list(range(24)), "z": [[0.0 for _ in range(24)] for _ in range(7)]}
+    if "_published_dt" in df.columns and "view_count" in df.columns:
         local = df["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh")
         tmp = pd.DataFrame({
             "dow": local.dt.dayofweek,
             "hour": local.dt.hour,
-            "view_count": df["view_count"] if "view_count" in df.columns else 0,
+            "view_count": df["view_count"],
         }).dropna(subset=["dow", "hour"])
+        pivot = tmp.pivot_table(index="dow", columns="hour", values="view_count", aggfunc="median", fill_value=0)
+        pivot = pivot.reindex(index=range(7), columns=range(24), fill_value=0)
+        e2_heatmap = {"days": DAY_NAMES_VI, "hours": list(range(24)), "z": pivot.values.tolist()}
 
-        # Pivot to create heatmap matrix
-        pivot = tmp.pivot_table(
-            index="dow",
-            columns="hour",
-            values="view_count",
-            aggfunc="mean",
-            fill_value=0
-        )
-
-        # Day names in Vietnamese
-        day_names = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
-        e2_heatmap = {
-            "days": [day_names[int(d)] for d in pivot.index],
-            "hours": pivot.columns.tolist(),
-            "z": pivot.values.tolist()
-        }
-
-    tag_engagement = _compute_tag_engagement(df)
+    categories_ordered = _ordered_categories(df["channel_category"] if "channel_category" in df.columns else [])
+    e1_hour_category_video_count: list[dict[str, Any]] = []
+    if "channel_category" in df.columns:
+        hour_source = df.copy()
+        if "hour_posted" not in hour_source.columns and "_published_dt" in hour_source.columns:
+            hour_source = hour_source.assign(hour_posted=hour_source["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh").dt.hour)
+        if "hour_posted" in hour_source.columns:
+            counts = hour_source.groupby(["hour_posted", "channel_category"], dropna=True).size().reset_index(name="count")
+            for hour in range(24):
+                row: dict[str, Any] = {"hour": hour}
+                for cat in categories_ordered:
+                    val = counts.loc[(counts["hour_posted"] == hour) & (counts["channel_category"] == cat), "count"].sum()
+                    row[cat] = int(val)
+                e1_hour_category_video_count.append(row)
 
     return {
-        "e1_box": e1_box,
+        "e1_hour_category_video_count": e1_hour_category_video_count,
         "e2_heatmap": e2_heatmap,
-        "tag_engagement": tag_engagement,
+        "categories": categories_ordered,
     }
 
 
@@ -546,78 +580,51 @@ def _compute_tag_engagement(df: pd.DataFrame) -> list[dict[str, Any]]:
 def get_economy(
     year_from: str | None = "2024-01", categories: list[str] | None = None
 ) -> dict[str, Any]:
-    v, _ = _require_loaded()
-    df = v.copy()
+    _, c = _require_loaded()
+    df = c.copy()
     if categories:
         df = df[df["channel_category"].isin(categories)]
 
-    if "_published_dt" not in df.columns:
-        return {
-            "f1_line": [],
-            "f2_bar": [],
-            "top_commercial_channels": [],
-        }
+    category_values = _ordered_categories(df["channel_category"] if "channel_category" in df.columns else [])
+    category_rank = {cat: idx for idx, cat in enumerate(CATEGORY_ORDER)}
 
-    if year_from:
-        try:
-            cutoff = pd.Timestamp(f"{year_from}-01" if len(year_from) == 7 else year_from, tz="UTC")
-        except Exception:
-            cutoff = pd.Timestamp("2024-01-01", tz="UTC")
-        df = df[df["_published_dt"] >= cutoff]
-
-    # F1: Line chart - commercial video count by month
-    f1_line: list[dict[str, Any]] = []
-    if "is_commercial" in df.columns:
-        commercial_df = df[df["is_commercial"] == True]  # noqa: E712
-        tmp = pd.DataFrame({
-            "month": commercial_df["_published_dt"].dt.tz_convert("UTC").dt.to_period("M").astype(str),
+    subscriber_engagement_scatter: list[dict[str, Any]] = []
+    for _, row in df.iterrows():
+        category = str(row.get("channel_category", ""))
+        subscriber_engagement_scatter.append({
+            "channel_name": str(row.get("channel_name", "")),
+            "category": category,
+            "subscriber_count": _safe_int(row.get("subscriber_count", 0)),
+            "avg_engagement_rate": _safe_float(row.get("avg_engagement_rate", 0.0)),
+            "total_view_count": _safe_float(row.get("total_view_count", row.get("view_count", 0.0))),
         })
-        monthly_counts = tmp.groupby("month").size().reset_index(name="count")
-        f1_line = [
-            {"month": row["month"], "count": int(row["count"])}
-            for _, row in monthly_counts.iterrows()
-        ]
+    subscriber_engagement_scatter.sort(key=lambda r: (category_rank.get(r["category"], len(category_rank)), r["channel_name"]))
 
-    # F2: Bar chart - avg views commercial vs non-commercial by category
-    f2_bar: list[dict[str, Any]] = []
-    if "is_commercial" in df.columns and "channel_category" in df.columns:
-        for cat, sub in df.groupby("channel_category", dropna=True):
-            commercial = sub[sub["is_commercial"] == True]  # noqa: E712
-            non_commercial = sub[sub["is_commercial"] == False]  # noqa: E712
+    strategy_points: list[dict[str, Any]] = []
+    video_col = "video_count_dataset" if "video_count_dataset" in df.columns else "video_count"
+    views_col = "avg_views_per_video_dataset" if "avg_views_per_video_dataset" in df.columns else "avg_views_per_video"
+    for _, row in df.iterrows():
+        category = str(row.get("channel_category", ""))
+        strategy_points.append({
+            "channel_name": str(row.get("channel_name", "")),
+            "category": category,
+            "video_count_dataset": _safe_int(row.get(video_col, 0)),
+            "avg_views_per_video_dataset": _safe_float(row.get(views_col, 0.0)),
+            "subscriber_count": _safe_int(row.get("subscriber_count", 0)),
+        })
+    strategy_points.sort(key=lambda r: (category_rank.get(r["category"], len(category_rank)), r["channel_name"]))
 
-            f2_bar.append({
-                "category": cat,
-                "commercial": float(commercial["view_count"].mean()) if len(commercial) and "view_count" in commercial.columns else 0.0,
-                "non_commercial": float(non_commercial["view_count"].mean()) if len(non_commercial) and "view_count" in non_commercial.columns else 0.0,
-            })
-
-    # Top 10 commercial channels
-    top_commercial_channels: list[dict[str, Any]] = []
-    if "is_commercial" in df.columns and "channel_name" in df.columns:
-        commercial = df[df["is_commercial"] == True]  # noqa: E712
-        if len(commercial):
-            top = (
-                commercial.groupby(["channel_id", "channel_name"], dropna=True)
-                .size()
-                .reset_index(name="commercial_count")
-                .sort_values("commercial_count", ascending=False)
-                .head(10)
-            )
-            top_commercial_channels = [
-                {"channel_name": row["channel_name"], "commercial_count": int(row["commercial_count"])}
-                for _, row in top.iterrows()
-            ]
-
-    commercial_view_by_category, commercial_engagement_by_category = (
-        _compute_commercial_split(df)
-    )
+    median_x = _safe_float(df[video_col].median() - 50 if video_col in df.columns and len(df) else 0.0)
+    median_y = _safe_float(df[views_col].median() if views_col in df.columns and len(df) else 0.0)
 
     return {
-        "f1_line": f1_line,
-        "f2_bar": f2_bar,
-        "top_commercial_channels": top_commercial_channels,
-        "commercial_view_by_category": commercial_view_by_category,
-        "commercial_engagement_by_category": commercial_engagement_by_category,
+        "f1_subscriber_engagement_scatter": subscriber_engagement_scatter,
+        "f2_strategy_quadrant": {
+            "points": strategy_points,
+            "median_x": median_x,
+            "median_y": median_y,
+        },
+        "categories": category_values,
     }
 
 

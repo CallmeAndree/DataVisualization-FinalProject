@@ -69,11 +69,11 @@ Dữ liệu tóm tắt (đã được lọc):
 {summary_text}{filter_text}
 
 Yêu cầu:
-- Đưa ra insight ngắn gọn (1-2 câu, tối đa 100 từ)
-- Tập trung vào pattern hoặc điểm nổi bật nhất
-- Sử dụng tiếng Việt tự nhiên
-- Không giải thích phương pháp phân tích
-- Trả về CHÍNH XÁC insight text, không thêm prefix hay format
+- Viết 1 đoạn phân tích dữ liệu bằng tiếng Việt, 3-5 câu, khoảng 120-180 từ
+- Nêu rõ phát hiện chính, số liệu minh chứng từ dữ liệu tóm tắt, ý nghĩa/diễn giải, và gợi ý cách đọc dashboard
+- Không chỉ mô tả biểu đồ; hãy giải thích vì sao pattern hoặc điểm nổi bật đó đáng chú ý
+- Chỉ sử dụng các giá trị có trong dữ liệu tóm tắt, không suy đoán ngoài dữ liệu
+- Trả về CHÍNH XÁC insight text dạng văn xuôi, không thêm prefix, markdown, bullet, heading hay JSON
 
 Insight:"""
         print(f"DEBUG - summary_text={summary_text}\n")
@@ -81,30 +81,29 @@ Insight:"""
 
         return prompt
 
-    def truncate_insight(self, text: str, max_words: int = 150) -> str:
+    def truncate_insight(self, text: str, max_words: int = 220, max_sentences: int = 5) -> str:
         """
-        Truncate insight to max words or first 2 sentences.
+        Truncate insight to max words or sentence count.
 
         Args:
             text: Original insight text
             max_words: Maximum word count
+            max_sentences: Maximum sentence count
 
         Returns:
             Truncated text
         """
         text = text.strip()
 
-        # Check word count
         words = text.split()
-        if len(words) <= max_words:
-            # Check sentence count
-            sentences = text.split('. ')
-            if len(sentences) <= 2:
-                return text
-            # Return first 2 sentences
-            return '. '.join(sentences[:2]) + '.'
+        sentences = text.split('. ')
 
-        # Truncate to max words, then to sentence boundary
+        if len(words) <= max_words and len(sentences) <= max_sentences:
+            return text
+
+        if len(sentences) > max_sentences:
+            return '. '.join(sentences[:max_sentences]).rstrip('.') + '.'
+
         truncated = ' '.join(words[:max_words])
         last_period = truncated.rfind('.')
         if last_period > 0:

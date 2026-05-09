@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { CATEGORY_COLORS, CHART_PALETTE } from "@/lib/constants";
+import { CATEGORY_COLORS, chartColor, chartPaletteColor, CHART_CHROME } from "@/lib/constants";
 
 interface PieDonutProps {
   data: { name: string; value: number; category?: string }[];
@@ -40,7 +40,7 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
           onClick={handleClick}
           cursor={onSliceClick ? "pointer" : "default"}
           strokeWidth={1}
-          stroke="#f2f2f2"
+          stroke={CHART_CHROME.grid}
         >
           {data.map((entry, index) => {
             const isSelected = selectedSlice === (entry.category ?? entry.name);
@@ -49,7 +49,7 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
             return (
               <Cell
                 key={entry.name}
-                fill={CATEGORY_COLORS[entry.category ?? entry.name] ?? CHART_PALETTE[index % CHART_PALETTE.length]}
+                fill={chartColor(CATEGORY_COLORS[entry.category ?? entry.name], chartPaletteColor(index))}
                 opacity={!hasSelection || isSelected ? 1 : 0.4}
                 className="transition-opacity duration-300 hover:opacity-70"
               />
@@ -58,11 +58,11 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
         </Pie>
         <Tooltip
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #d9d9dd",
+            background: CHART_CHROME.tooltipBg,
+            border: `1px solid ${CHART_CHROME.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 13,
-            color: "#212121",
+            color: CHART_CHROME.tooltipText,
           }}
           formatter={(v) =>
             new Intl.NumberFormat("vi-VN").format(v as number)
@@ -72,7 +72,7 @@ export function PieDonut({ data, onSliceClick, selectedSlice }: PieDonutProps) {
           iconType="circle"
           iconSize={8}
           formatter={(value) => (
-            <span style={{ fontSize: 12, color: "#75758a" }}>{value}</span>
+            <span style={{ fontSize: 12, color: CHART_CHROME.legend }}>{value}</span>
           )}
         />
       </PieChart>

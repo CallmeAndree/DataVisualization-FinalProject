@@ -132,7 +132,7 @@ function GalleryContent() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#212121]" />
         </div>
       ) : error ? (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-[#b30000]">{error}</p>
       ) : charts.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -164,7 +164,7 @@ function GalleryContent() {
               className="group cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
               onClick={() => setViewTarget(chart)}
             >
-              <div className="relative bg-[#f9f9f9]">
+              <div className="relative bg-[#eeece7]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={chart.figure_base64}
@@ -181,7 +181,7 @@ function GalleryContent() {
                   }}
                   aria-label="Xóa chart"
                 >
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <Trash2 className="h-4 w-4 text-[#b30000]" />
                 </Button>
               </div>
               <CardContent className="space-y-2 pt-4">

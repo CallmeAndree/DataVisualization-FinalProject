@@ -1,15 +1,14 @@
 "use client";
 /**
- * Anomaly Page — RO3: Anomaly detection and viral video analysis.
- * Charts: D1 ScatterPlotly (view vs like_view_ratio with suspect flag), D2 TopVideosTable (top 15 viral).
+ * Anomaly Page — RO4: Giải Phẫu Video Viral.
  */
 import { useEffect, useState } from "react";
 import { api, type AnomalyData } from "@/lib/api";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
-import { ScatterPlotly } from "@/components/charts/ScatterPlotly";
-import { TopVideosTable } from "@/components/charts/TopVideosTable";
+import { DualAxisBarLinePlotly } from "@/components/charts/DualAxisBarLinePlotly";
+import { BoxPlotly } from "@/components/charts/BoxPlotly";
 import {
   Select,
   SelectContent,
@@ -17,211 +16,131 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { CHART_PALETTE } from "@/lib/constants";
-import { COLORS, TEXT_COLORS } from "@/lib/design-tokens";
+import { CATEGORIES, CATEGORY_COLORS, labelCategory } from "@/lib/constants";
+import { TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function AnomalyPage() {
   const [data, setData] = useState<AnomalyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [channelId, setChannelId] = useState<string | null>("All");
-  const [yearRange, setYearRange] = useState<number[]>([2015, 2026]);
-  const [channels, setChannels] = useState<string[]>([]);
-
-  // Insight state
-  const [insight, setInsight] = useState<string>("");
+  const [category, setCategory] = useState<string | null>("All");
+  const [insight, setInsight] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
-  const [insightError, setInsightError] = useState<string>("");
+  const [insightError, setInsightError] = useState("");
 
-  // Load channel list on mount
-  useEffect(() => {
-    api
-      .channels()
-      .then((res) => {
-        const names = res.c2_scatter.map((c) => c.channel_name).sort();
-        setChannels(names);
-      })
-      .catch((err) => console.error("Failed to load channels:", err));
-  }, []);
-
-  // Debounced fetch
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true);
       api
-        .anomaly({
-          channel_id: channelId === "All" || channelId === null ? undefined : channelId,
-          year_from: yearRange[0],
-          year_to: yearRange[1],
+        .anomaly()
+        .then((res) => {
+          if (category && category !== "All") {
+            setData({
+              d1_viral_by_category: res.d1_viral_by_category.filter((row) => row.category === category),
+              d2_viral_momentum: {
+                baseline_all: res.d2_viral_momentum.baseline_all,
+                points: res.d2_viral_momentum.points.filter((row) => row.category === category),
+              },
+            });
+          } else {
+            setData(res);
+          }
         })
-        .then(setData)
-        .catch((err) => console.error("Failed to load anomaly data:", err))
+        .catch((err) => console.error("Failed to load RO4 data:", err))
         .finally(() => setLoading(false));
     }, 300);
-
     return () => clearTimeout(timer);
-  }, [channelId, yearRange]);
+  }, [category]);
 
   const resetInsight = () => {
     setInsight("");
     setInsightError("");
   };
 
-  const setChannelFilter = (value: string | null) => {
-    setChannelId(value);
-    resetInsight();
-  };
-
-  const setYearFilter = (value: number[]) => {
-    setYearRange(value);
-    resetInsight();
-  };
-
-  const calculateSummary = (data: AnomalyData) => {
-    const suspectVideos = data.d1_scatter.filter((v) => v.suspect_fake_view);
-    const topVideo = data.d2_viral[0];
-
-    return {
-      total_videos: data.d1_scatter.length,
-      suspect_count: suspectVideos.length,
-      top_channel: topVideo?.channel || "",
-      top_views: topVideo?.view_count || 0,
-      viral_count: data.d2_viral.length,
-    };
-  };
-
   const handleGetInsight = async () => {
     if (!data) return;
-
     setInsightLoading(true);
     setInsightError("");
-
     try {
-      const summary = calculateSummary(data);
-      const filters = {
-        channel_id: channelId === "All" ? null : channelId,
-        year_from: yearRange[0],
-        year_to: yearRange[1],
-      };
-
       const response = await api.generateInsight({
         page: "anomaly",
-        filters,
-        summary,
+        filters: { category: category === "All" ? null : category },
+        summary: data,
       });
-
       setInsight(response.insight);
     } catch (error) {
-      setInsightError(
-        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
-      );
+      setInsightError(error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại.");
     } finally {
       setInsightLoading(false);
     }
   };
 
   const handleReset = () => {
-    setChannelId("All");
+    setCategory("All");
     resetInsight();
   };
+
+  const momentumCategories = data ? CATEGORIES.filter((cat) => data.d2_viral_momentum.points.some((point) => point.category === cat)) : [];
 
   return (
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2">
-          <label className={`text-sm ${TEXT_COLORS.slate}`}>Kênh:</label>
-          <Select value={channelId} onValueChange={setChannelFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
+          <Select value={category} onValueChange={(value) => { setCategory(value); resetInsight(); }}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="All">Tất cả</SelectItem>
-              {channels.map((ch) => (
-                <SelectItem key={ch} value={ch}>
-                  {ch}
-                </SelectItem>
-              ))}
+              {CATEGORIES.map((cat) => <SelectItem key={cat} value={cat}>{labelCategory(cat)}</SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className={`text-sm ${TEXT_COLORS.slate} whitespace-nowrap`}>Năm:</label>
-          <div className="w-48">
-            <Slider
-              value={yearRange}
-              onValueChange={(val) => setYearFilter(val as number[])}
-              min={2015}
-              max={2026}
-              step={1}
-            />
-          </div>
-          <span className={`text-xs ${TEXT_COLORS.muted} tabular-nums`}>
-            {yearRange[0]} – {yearRange[1]}
-          </span>
         </div>
       </FilterBar>
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
-          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO3</p>
-          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
-            Bất Thường & Viral
-          </h1>
+          <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO4</p>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Giải Phẫu Video Viral</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
-            Phát hiện video có dấu hiệu bất thường và phân tích video viral.
+            Phân tích danh mục nào tạo nhiều video viral nhất và mức lan truyền tiếp nối sau mỗi sự kiện viral.
           </p>
         </header>
 
-        {loading ? (
-          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
-        ) : !data ? (
-          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
-        ) : (
+        {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <ChartCard
-                title="D1: Lượt xem và tỉ lệ thích/lượt xem"
-                description="Màu đỏ/cam = nghi ngờ fake view"
-              >
-                <ScatterPlotly
-                  traces={[
-                    {
-                      name: "Bình thường",
-                      x: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.view_count),
-                      y: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.like_view_ratio),
-                      text: data.d1_scatter.filter((p) => !p.suspect_fake_view).map((p) => p.title),
-                      marker: { color: CHART_PALETTE[2], opacity: 0.6 },
-                    },
-                    {
-                      name: "Nghi ngờ",
-                      x: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.view_count),
-                      y: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.like_view_ratio),
-                      text: data.d1_scatter.filter((p) => p.suspect_fake_view).map((p) => p.title),
-                      marker: { size: 5, color: COLORS.error, opacity: 0.75 },
-                    },
-                  ]}
-                  xAxisType="log"
-                  xLabel="Lượt xem (thang log)"
-                  yLabel="Tỉ lệ thích/lượt xem"
+              <ChartCard title="B1: Số lượng và tỷ lệ video viral theo danh mục" description="Cột là số video viral, đường là viral rate">
+                <DualAxisBarLinePlotly
+                  x={data.d1_viral_by_category.map((row) => labelCategory(row.category))}
+                  barY={data.d1_viral_by_category.map((row) => row.viral_count)}
+                  lineY={data.d1_viral_by_category.map((row) => row.viral_rate)}
+                  barLabel="Số video viral"
+                  lineLabel="Tỷ lệ viral"
                   height={340}
                 />
               </ChartCard>
 
-              <ChartCard
-                title="D2: Top 15 video lan truyền"
-                description="Sắp xếp theo lượt xem giảm dần"
-              >
-                <TopVideosTable data={data.d2_viral} />
+              <ChartCard title="B2: Viral momentum theo kênh" description="Tỷ lệ viral trong 10 video tiếp theo sau mỗi video viral, trung bình theo kênh">
+                <BoxPlotly
+                  traces={momentumCategories.map((cat) => {
+                    const points = data.d2_viral_momentum.points.filter((point) => point.category === cat);
+                    return {
+                      name: labelCategory(cat),
+                      y: points.map((point) => point.momentum_rate),
+                      text: points.map((point) => `${point.channel_name} (${point.n_viral_events} viral events)`),
+                      color: CATEGORY_COLORS[cat],
+                    };
+                  })}
+                  yLabel="Viral momentum rate"
+                  height={340}
+                  showPoints
+                  percent
+                  baseline={data.d2_viral_momentum.baseline_all}
+                  baselineLabel="Viral baseline toàn bộ dataset"
+                />
               </ChartCard>
             </div>
 
-            <InsightCard
-              content={insight}
-              loading={insightLoading}
-              error={insightError}
-              onGetInsight={handleGetInsight}
-            />
+            <InsightCard content={insight} loading={insightLoading} error={insightError} onGetInsight={handleGetInsight} />
           </>
         )}
       </div>

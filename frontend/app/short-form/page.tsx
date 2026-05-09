@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, CHART_PALETTE, labelCategory } from "@/lib/constants";
+import { CATEGORIES, DURATION_COLORS, SHORT_FORM_HEATMAP_COLORSCALE, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
 
 export default function ShortFormPage() {
@@ -177,7 +177,8 @@ export default function ShortFormPage() {
                   z={data.b1_heatmap.z}
                   x={data.b1_heatmap.years.map(String)}
                   y={data.b1_heatmap.channels}
-                  colorscale="Greens"
+                  colorscale={SHORT_FORM_HEATMAP_COLORSCALE}
+                  reversescale={false}
                   xLabel="Năm"
                   yLabel="Kênh"
                   height={480}
@@ -192,8 +193,8 @@ export default function ShortFormPage() {
                   data={data.b2_bar}
                   xKey="label"
                   bars={[
-                    { key: "short", label: "Video ngắn", color: CHART_PALETTE[4] },
-                    { key: "long", label: "Video dài", color: CHART_PALETTE[5] },
+                    { key: "short", label: "Video ngắn", color: DURATION_COLORS.Short },
+                    { key: "long", label: "Video dài", color: DURATION_COLORS.Long },
                   ]}
                 />
               </ChartCard>

@@ -1,233 +1,159 @@
 "use client";
 /**
- * Economy Page — RO5: Creator economy analysis.
- * Charts: F1 LineChart (commercial video count by month), F2 BarChart (commercial vs non-commercial by category).
+ * Economy Page — RO5: Quy Mô Kênh vs. Chiến Lược.
  */
 import { useEffect, useState } from "react";
 import { api, type EconomyData } from "@/lib/api";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
-import { LineChart } from "@/components/charts/LineChart";
-import { BarChart } from "@/components/charts/BarChart";
-import { CATEGORIES, CHART_PALETTE, formatNumber, labelCategory } from "@/lib/constants";
-import { COLORS, TEXT_COLORS, BG_COLORS, BORDER_COLORS } from "@/lib/design-tokens";
+import { ScatterPlotly } from "@/components/charts/ScatterPlotly";
+import { CATEGORIES, CATEGORY_COLORS, labelCategory } from "@/lib/constants";
+import { TEXT_COLORS } from "@/lib/design-tokens";
+
+function scaleSizes(values: number[], min = 28, max = 90): number[] {
+  const safe = values.map((v) => Math.max(0, v || 0));
+  const lo = Math.min(...safe, 0);
+  const hi = Math.max(...safe, 1);
+  if (hi === lo) return safe.map(() => (min + max) / 2);
+  return safe.map((v) => min + ((v - lo) / (hi - lo)) * (max - min));
+}
 
 export default function EconomyPage() {
   const [data, setData] = useState<EconomyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [yearFrom, setYearFrom] = useState<string>("2024-01");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-
-  // Insight state
-  const [insight, setInsight] = useState<string>("");
+  const [insight, setInsight] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
-  const [insightError, setInsightError] = useState<string>("");
+  const [insightError, setInsightError] = useState("");
 
-  // Debounced fetch
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true);
       api
-        .economy({
-          year_from: yearFrom,
-          categories: selectedCategories.length > 0 ? selectedCategories.join(",") : undefined,
-        })
+        .economy({ categories: selectedCategories.length ? selectedCategories.join(",") : undefined })
         .then(setData)
-        .catch((err) => console.error("Failed to load economy data:", err))
+        .catch((err) => console.error("Failed to load RO5 data:", err))
         .finally(() => setLoading(false));
     }, 300);
-
     return () => clearTimeout(timer);
-  }, [yearFrom, selectedCategories]);
+  }, [selectedCategories]);
 
   const resetInsight = () => {
     setInsight("");
     setInsightError("");
   };
 
-  const setYearFromFilter = (value: string) => {
-    setYearFrom(value);
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
     resetInsight();
-  };
-
-  const calculateSummary = (data: EconomyData) => {
-    const commercialCount = data.f1_line.reduce((sum, item) => sum + item.count, 0);
-
-    const topChannels = data.top_commercial_channels.slice(0, 3).map((ch) => ({
-      name: ch.channel_name,
-      count: ch.commercial_count,
-    }));
-
-    return {
-      commercial_video_count: commercialCount,
-      top_commercial_channels: topChannels,
-      year_from: yearFrom,
-    };
   };
 
   const handleGetInsight = async () => {
     if (!data) return;
-
     setInsightLoading(true);
     setInsightError("");
-
     try {
-      const summary = calculateSummary(data);
-      const filters = {
-        year_from: yearFrom,
-        categories: selectedCategories.length > 0 ? selectedCategories : null,
-      };
-
       const response = await api.generateInsight({
         page: "economy",
-        filters,
-        summary,
+        filters: { categories: selectedCategories },
+        summary: data,
       });
-
       setInsight(response.insight);
     } catch (error) {
-      setInsightError(
-        error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại."
-      );
+      setInsightError(error instanceof Error ? error.message : "Không thể tạo insight. Vui lòng thử lại.");
     } finally {
       setInsightLoading(false);
     }
   };
 
   const handleReset = () => {
-    setYearFrom("2024-01");
     setSelectedCategories([]);
     resetInsight();
   };
 
-  const toggleCategory = (cat: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
-    );
-    resetInsight();
-  };
+  const categories = data?.categories.length ? data.categories : CATEGORIES;
+  // Balanced bubble ranges for readable data points without overwhelming the Economy charts.
+  const scatterSizes = data ? scaleSizes(data.f1_subscriber_engagement_scatter.map((point) => point.total_view_count), 12, 42) : [];
+  const quadrantSizes = data ? scaleSizes(data.f2_strategy_quadrant.points.map((point) => point.subscriber_count), 14, 48) : [];
 
   return (
     <div className="flex flex-col h-full">
       <FilterBar onReset={handleReset}>
-        <div className="flex items-center gap-2">
-          <label className={`text-sm ${TEXT_COLORS.slate}`}>Từ tháng:</label>
-          <input
-            type="month"
-            value={yearFrom}
-            onChange={(e) => setYearFromFilter(e.target.value)}
-            className={`px-2 py-1 text-sm ${BORDER_COLORS.hairline} rounded ${BG_COLORS.canvas} ${TEXT_COLORS.ink}`}
-            min="2015-01"
-            max="2026-05"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
-          <div className="flex flex-wrap gap-1">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => toggleCategory(cat)}
-                className="px-2 py-1 text-xs rounded transition-colors"
-                style={{
-                  background: selectedCategories.includes(cat) ? COLORS.actionBlue : COLORS.cardBorder,
-                  color: selectedCategories.includes(cat) ? COLORS.canvas : COLORS.slate,
-                  border: "1px solid",
-                  borderColor: selectedCategories.includes(cat) ? COLORS.actionBlue : COLORS.hairline,
-                }}
-              >
-                {labelCategory(cat)}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</span>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${selectedCategories.includes(cat) ? "bg-[#003c33] text-white border-[#003c33]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
+            >
+              {labelCategory(cat)}
+            </button>
+          ))}
         </div>
       </FilterBar>
 
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
           <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO5</p>
-          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
-            Kinh tế nhà sáng tạo
-          </h1>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Quy Mô Kênh vs. Chiến Lược</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
-            Phân tích xu hướng video thương mại và YouTube Shopping.
+            Đánh giá mối quan hệ giữa quy mô người đăng ký, tương tác trung bình và chiến lược đăng tải của từng kênh YouTube.
           </p>
         </header>
 
-        {loading ? (
-          <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
-        ) : !data ? (
-          <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
-        ) : (
+        {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <ChartCard
-                title="F1: Số lượng video thương mại theo tháng"
-                description="Đường mốc: YouTube Shopping VN (10/2024)"
-              >
-                <LineChart
-                  data={data.f1_line}
-                  xKey="month"
-                  lines={[{ key: "count", label: "Video thương mại", color: CHART_PALETTE[3] }]}
-                  referenceLine="2024-10"
-                  referenceLabel="YouTube Shopping VN"
-                  yFormatter={formatNumber}
+              <ChartCard title="B1: Subscriber count vs. engagement rate" description="Kích thước điểm biểu thị total view count">
+                <ScatterPlotly
+                  traces={categories.map((cat) => {
+                    const points = data.f1_subscriber_engagement_scatter
+                      .map((point, index) => ({ ...point, markerSize: scatterSizes[index] }))
+                      .filter((point) => point.category === cat);
+                    return {
+                      name: labelCategory(cat),
+                      x: points.map((point) => point.subscriber_count),
+                      y: points.map((point) => point.avg_engagement_rate),
+                      text: points.map((point) => point.channel_name),
+                      marker: { size: points.map((point) => point.markerSize), color: CATEGORY_COLORS[cat], opacity: 0.72 },
+                    };
+                  })}
+                  xAxisType="log"
+                  percentY
+                  xLabel="Số người đăng ký (log)"
+                  yLabel="Average engagement rate"
+                  height={360}
                 />
               </ChartCard>
 
-              <ChartCard
-                title="F2: Lượt xem trung bình của video thương mại và không thương mại"
-                description="Biểu đồ cột nhóm theo danh mục"
-              >
-                <BarChart
-                  data={data.f2_bar}
-                  xKey="category"
-                  bars={[
-                    { key: "commercial", label: "Thương mại", color: CHART_PALETTE[3] },
-                    { key: "non_commercial", label: "Không thương mại", color: CHART_PALETTE[2] },
-                  ]}
-                  yFormatter={formatNumber}
+              <ChartCard title="B2: Posting strategy quadrant" description="X: số video trong dataset, Y: lượt xem trung bình/video, bubble size: subscriber count">
+                <ScatterPlotly
+                  traces={categories.map((cat) => {
+                    const points = data.f2_strategy_quadrant.points
+                      .map((point, index) => ({ ...point, markerSize: quadrantSizes[index] }))
+                      .filter((point) => point.category === cat);
+                    return {
+                      name: labelCategory(cat),
+                      x: points.map((point) => point.video_count_dataset),
+                      y: points.map((point) => point.avg_views_per_video_dataset),
+                      text: points.map((point) => point.channel_name),
+                      marker: { size: points.map((point) => point.markerSize), color: CATEGORY_COLORS[cat], opacity: 0.68 },
+                    };
+                  })}
+                  yAxisType="log"
+                  xLabel="Video count trong dataset"
+                  yLabel="Average views/video (log)"
+                  height={360}
+                  referenceX={data.f2_strategy_quadrant.median_x}
+                  referenceY={data.f2_strategy_quadrant.median_y}
+                  quadrantLabels={["Ít video / view cao", "Nhiều video / view cao", "Ít video / view thấp", "Nhiều video / view thấp"]}
                 />
               </ChartCard>
             </div>
 
-            {/* Top 10 commercial channels table */}
-            <div className="mb-8">
-              <ChartCard title="Top 10 kênh có nhiều video thương mại nhất" description="">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className={`border-b ${BORDER_COLORS.hairline}`}>
-                        <th className={`text-left py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>#</th>
-                        <th className={`text-left py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>Kênh</th>
-                        <th className={`text-right py-2 px-3 ${TEXT_COLORS.muted} font-medium`}>Số video</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.top_commercial_channels.map((row, i) => (
-                        <tr key={i} className={`border-b ${BORDER_COLORS.cardBorder}`}>
-                          <td className={`py-2 px-3 ${TEXT_COLORS.muted}`}>{i + 1}</td>
-                          <td className={`py-2 px-3 ${TEXT_COLORS.ink}`}>{row.channel_name}</td>
-                          <td className={`py-2 px-3 text-right tabular-nums ${TEXT_COLORS.ink}`}>
-                            {row.commercial_count}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </ChartCard>
-            </div>
-
-            <InsightCard
-              content={insight}
-              loading={insightLoading}
-              error={insightError}
-              onGetInsight={handleGetInsight}
-            />
+            <InsightCard content={insight} loading={insightLoading} error={insightError} onGetInsight={handleGetInsight} />
           </>
         )}
       </div>

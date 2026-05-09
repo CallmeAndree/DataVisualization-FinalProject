@@ -20,7 +20,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
-
+export type RequestStatus =
+  | "pending"
+  | "edited"
+  | "approved"
+  | "executing"
+  | "executed"
+  | "completed"
+  | "failed"
+  | "rejected";
 // ── Utility types ─────────────────────────────────────────────────────────────
 
 export type Schema = {
@@ -35,7 +43,7 @@ export type LogItem = {
   id: string;
   created_at: string;
   prompt: string;
-  status: string;
+  status: RequestStatus;
   execution_time_ms: number | null;
   was_edited: boolean;
   has_figures: boolean;
@@ -128,12 +136,12 @@ export type GenerateResponse = {
   request_id: string;
   code: string;
   explanation: string;
-  status: string;
+  status: RequestStatus;
 };
 
 export type ExecuteResponse = {
   request_id: string;
-  status: string;
+  status: RequestStatus;
   stdout: string;
   stderr: string;
   figures: string[];          // base64 data URIs: "data:image/png;base64,..."
@@ -155,7 +163,7 @@ export type LogDetail = {
   ai_code: string;
   edited_code: string | null;
   was_edited: boolean;
-  status: string;
+  status: RequestStatus;
   explanation: string | null;
   stdout: string | null;
   stderr: string | null;

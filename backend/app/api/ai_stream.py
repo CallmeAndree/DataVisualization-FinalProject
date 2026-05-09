@@ -70,13 +70,13 @@ async def generate_stream(req: GenerateStreamRequest):
                 ai_explanation=full_explanation,
             )
 
-            # Send done event
-            yield f"event: done\ndata: {{'request_id': '{request_id}'}}\n\n"
+            # Send done event with valid JSON
+            yield f"event: done\ndata: {json.dumps({'request_id': request_id}, ensure_ascii=False)}\n\n"
 
         except Exception as e:
-            # Send error event
-            error_msg = str(e).replace("'", "\\'")
-            yield f"event: error\ndata: {{'error': '{error_msg}'}}\n\n"
+            # Send error event with valid JSON
+            error_msg = str(e)
+            yield f"event: error\ndata: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         event_generator(),

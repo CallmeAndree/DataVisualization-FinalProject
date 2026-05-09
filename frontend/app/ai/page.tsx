@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ai/ChatInput";
@@ -152,27 +152,37 @@ export default function AIWorkspacePage() {
   // Show skeleton when waiting for first chunk
   const showSkeleton = streaming.isStreaming && !streaming.code;
 
-  // Update request state as streaming progresses
-  if (streaming.isStreaming && streaming.code && !request) {
-    setRequest({
-      id: streaming.requestId || "",
-      ai_code: streaming.code,
-      edited_code: null,
-      explanation: streaming.explanation,
-      status: "generating",
-    });
-  } else if (streaming.isStreaming && streaming.code && request) {
-    if (
-      request.ai_code !== streaming.code ||
-      request.explanation !== streaming.explanation
-    ) {
-      setRequest({
-        ...request,
-        ai_code: streaming.code,
-        explanation: streaming.explanation,
-      });
+  // Sync request state with streaming progress in an effect to avoid state updates during render
+  useEffect(() => {
+    if (!streaming.isStreaming || !streaming.code) {
+      return;
     }
-  }
+
+    setRequest((prev) => {
+      if (!prev) {
+        return {
+          id: streaming.requestId || "",
+          ai_code: streaming.code,
+          edited_code: null,
+          explanation: streaming.explanation,
+          status: "generating",
+        };
+      }
+
+      if (
+        prev.ai_code !== streaming.code ||
+        prev.explanation !== streaming.explanation
+      ) {
+        return {
+          ...prev,
+          ai_code: streaming.code,
+          explanation: streaming.explanation,
+        };
+      }
+
+      return prev;
+    });
+  }, [streaming.isStreaming, streaming.code, streaming.explanation, streaming.requestId]);
 
   return (
     <div className="min-h-screen">

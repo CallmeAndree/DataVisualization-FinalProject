@@ -27,9 +27,20 @@ async def execute(payload: ExecuteRequest) -> ExecuteResponse:
 
     await update_request_status(payload.request_id, "executing")
 
-    result = await executor.run_code(
-        payload.code, settings.SANDBOX_DIR, timeout=30
-    )
+    try:
+        result = await executor.run_code(
+            payload.code, settings.SANDBOX_DIR, timeout=30
+        )
+    except Exception as exc:
+        result = {
+            "status": "failed",
+            "stdout": "",
+            "stderr": "",
+            "figures": [],
+            "execution_time_ms": 0,
+            "error_message": str(exc) or "Lỗi thực thi không rõ",
+        }
+
     await update_request_execution(payload.request_id, result)
 
     return ExecuteResponse(

@@ -55,12 +55,28 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
       setState((prev) => ({ ...prev, isStreaming: true, error: null }));
 
       try {
+        // Fetch schema if not provided
+        let finalDataContext = dataContext;
+        if (!finalDataContext) {
+          try {
+            const schemaRes = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/data/schema`
+            );
+            if (schemaRes.ok) {
+              finalDataContext = await schemaRes.json();
+            }
+          } catch (err) {
+            console.warn("Failed to fetch schema:", err);
+            // Continue anyway with undefined dataContext
+          }
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/ai/generate`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt, data_context: dataContext }),
+            body: JSON.stringify({ prompt, data_context: finalDataContext }),
           }
         );
 
@@ -122,12 +138,29 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
         abortControllerRef.current = new AbortController();
 
         try {
+          // Fetch schema if not provided
+          let finalDataContext = dataContext;
+          if (!finalDataContext) {
+            try {
+              const schemaRes = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/data/schema`,
+                { signal: abortControllerRef.current.signal }
+              );
+              if (schemaRes.ok) {
+                finalDataContext = await schemaRes.json();
+              }
+            } catch (err) {
+              console.warn("Failed to fetch schema:", err);
+              // Continue anyway with undefined dataContext
+            }
+          }
+
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/ai/generate-stream`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ prompt, data_context: dataContext }),
+              body: JSON.stringify({ prompt, data_context: finalDataContext }),
               signal: abortControllerRef.current.signal,
             }
           );
@@ -153,9 +186,17 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
             const lines = buffer.split("\n");
             buffer = lines.pop() || "";
 
-            for (const line of lines) {
+            for (let i = 0; i < lines.length; i += 1) {
+              const line = lines[i].trim();
+              if (!line) {
+                continue;
+              }
+
               if (line.startsWith("data: ")) {
-                const data = line.slice(6);
+                const data = line.slice(6).trim();
+                if (data === "[DONE]") {
+                  continue;
+                }
                 try {
                   const parsed = JSON.parse(data);
                   setState((prev) => ({
@@ -167,11 +208,15 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
                   console.warn("Failed to parse SSE data:", data);
                 }
               } else if (line.startsWith("event: done")) {
-                // Extract request_id from next data line
-                const nextLine = lines[lines.indexOf(line) + 1];
+                const nextLine = lines[i + 1]?.trim();
                 if (nextLine?.startsWith("data: ")) {
+                  const donePayload = nextLine.slice(6).trim();
+                  if (donePayload === "[DONE]") {
+                    setState((prev) => ({ ...prev, isStreaming: false }));
+                    continue;
+                  }
                   try {
-                    const doneData = JSON.parse(nextLine.slice(6));
+                    const doneData = JSON.parse(donePayload);
                     const requestId = doneData.request_id;
                     setState((prev) => ({
                       ...prev,
@@ -182,14 +227,15 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
                       onComplete(requestId);
                     }
                   } catch {
-                    console.warn("Failed to parse done event data");
+                    console.warn("Failed to parse done event data:", donePayload);
                   }
                 }
               } else if (line.startsWith("event: error")) {
-                const nextLine = lines[lines.indexOf(line) + 1];
+                const nextLine = lines[i + 1]?.trim();
                 if (nextLine?.startsWith("data: ")) {
+                  const errorPayload = nextLine.slice(6).trim();
                   try {
-                    const errorData = JSON.parse(nextLine.slice(6));
+                    const errorData = JSON.parse(errorPayload);
                     const errorMsg = errorData.error || "Unknown error";
                     setState((prev) => ({
                       ...prev,
@@ -200,7 +246,7 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
                       onError(errorMsg);
                     }
                   } catch {
-                    console.warn("Failed to parse error event data");
+                    console.warn("Failed to parse error event data:", errorPayload);
                   }
                 }
               }

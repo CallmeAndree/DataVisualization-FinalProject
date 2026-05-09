@@ -62,13 +62,22 @@ def _column_meta(df: pd.DataFrame) -> list[dict[str, Any]]:
             "min": None,
             "max": None,
             "mean": None,
+            "sample_values": None,
         }
-        if pd.api.types.is_numeric_dtype(s) and not pd.api.types.is_bool_dtype(s):
+        if pd.api.types.is_bool_dtype(s):
+            entry["sample_values"] = [True, False]
+        elif pd.api.types.is_numeric_dtype(s):
             non_null = s.dropna()
             if len(non_null) > 0:
                 entry["min"] = float(non_null.min())
                 entry["max"] = float(non_null.max())
                 entry["mean"] = float(non_null.mean())
+        elif pd.api.types.is_string_dtype(s) or s.dtype == object:
+            unique_vals = s.dropna().unique().tolist()
+            if len(unique_vals) <= 30:
+                entry["sample_values"] = sorted(str(v) for v in unique_vals)
+            else:
+                entry["sample_values"] = sorted(str(v) for v in unique_vals[:10])
         out.append(entry)
     return out
 

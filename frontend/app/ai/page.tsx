@@ -33,7 +33,6 @@ export default function AIWorkspacePage() {
   const [request, setRequest] = useState<RequestState | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
   const [lastPrompt, setLastPrompt] = useState("");
-
   // Feature flag for streaming (default: true)
   const enableStreaming =
     process.env.NEXT_PUBLIC_ENABLE_STREAMING !== "false";
@@ -185,7 +184,7 @@ export default function AIWorkspacePage() {
   }, [streaming.isStreaming, streaming.code, streaming.explanation, streaming.requestId]);
 
   return (
-    <div className="min-h-screen">
+    <div className="h-full overflow-y-auto">
       {/* Header */}
       <header className="border-b bg-white px-10 py-8 dark:bg-zinc-950">
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">

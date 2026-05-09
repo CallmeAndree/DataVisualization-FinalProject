@@ -66,8 +66,9 @@ export default function LogsPage() {
   const endIndex = Math.min((page + 1) * limit, total);
 
   return (
-    <div className="px-10 py-12">
-      <header className="mb-8">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto px-10 py-12">
+        <header className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">
           Nhật ký kiểm duyệt
         </p>
@@ -191,7 +192,8 @@ export default function LogsPage() {
             </>
           )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

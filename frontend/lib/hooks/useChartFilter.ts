@@ -155,13 +155,22 @@ function applyFilters<T extends ChartItem>(
     );
   }
 
-  // Filter by search term
+  // Filter by search term, matching Vietnamese text with or without diacritics.
   if (filters.search) {
-    const searchLower = filters.search.toLowerCase();
+    const normalizedSearch = normalizeSearchText(filters.search);
     result = result.filter((chart) =>
-      chart.title.toLowerCase().includes(searchLower)
+      normalizeSearchText(chart.title).includes(normalizedSearch)
     );
   }
 
   return result;
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
 }

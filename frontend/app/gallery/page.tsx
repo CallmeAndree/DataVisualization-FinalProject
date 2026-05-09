@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, type CompositionEvent } from "react";
 import Link from "next/link";
-import { Trash2, Search, X } from "lucide-react";
+import { Download, Trash2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +31,27 @@ function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n)}…` : s;
 }
 
+function toSafeFilename(value: string): string {
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+  return normalized || "chart";
+}
+
+function downloadChartPng(chart: SavedChart) {
+  const link = document.createElement("a");
+  link.href = chart.figure_base64;
+  link.download = `${toSafeFilename(chart.title)}-${chart.id}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 function GalleryContent() {
   const [charts, setCharts] = useState<SavedChart[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +59,11 @@ function GalleryContent() {
   const [deleteTarget, setDeleteTarget] = useState<SavedChart | null>(null);
   const [viewTarget, setViewTarget] = useState<SavedChart | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  const [searchInput, setSearchInput] = useState("");
+  const [isComposingSearch, setIsComposingSearch] = useState(false);
+ 
   // Use the chart filter hook with URL sync
-  const { filters, filteredCharts, updateFilters, clearFilters, hasActiveFilters } =
+  const { filteredCharts, updateFilters, clearFilters, hasActiveFilters } =
     useChartFilter(charts);
 
   useEffect(() => {
@@ -66,6 +89,22 @@ function GalleryContent() {
     };
   }, []);
 
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (!isComposingSearch) {
+      updateFilters({ search: value });
+    }
+  };
+
+  const handleSearchCompositionEnd = (
+    e: CompositionEvent<HTMLInputElement>
+  ) => {
+    setIsComposingSearch(false);
+    const value = e.currentTarget.value;
+    setSearchInput(value);
+    updateFilters({ search: value });
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -82,8 +121,9 @@ function GalleryContent() {
   };
 
   return (
-    <div className="px-10 py-12">
-      <header className="mb-8">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto px-10 py-12">
+        <header className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">
           Gallery
         </p>
@@ -103,8 +143,10 @@ function GalleryContent() {
           <Input
             type="text"
             placeholder="Tìm kiếm chart..."
-            value={filters.search || ""}
-            onChange={(e) => updateFilters({ search: e.target.value })}
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onCompositionStart={() => setIsComposingSearch(true)}
+            onCompositionEnd={handleSearchCompositionEnd}
             className="pl-9"
           />
         </div>
@@ -112,7 +154,10 @@ function GalleryContent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={clearFilters}
+            onClick={() => {
+              setSearchInput("");
+              clearFilters();
+            }}
             className="gap-2"
           >
             <X className="h-4 w-4" />
@@ -171,18 +216,35 @@ function GalleryContent() {
                   alt={chart.title}
                   className="h-[200px] w-full object-contain"
                 />
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  className="absolute right-2 top-2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteTarget(chart);
-                  }}
-                  aria-label="Xóa chart"
-                >
-                  <Trash2 className="h-4 w-4 text-[#b30000]" />
-                </Button>
+                <div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    className="bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadChartPng(chart);
+                      toast.success("Đã tải ảnh PNG");
+                    }}
+                    aria-label="Tải ảnh PNG"
+                    title="Tải ảnh PNG"
+                  >
+                    <Download className="h-4 w-4 text-[#1863dc]" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    className="bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(chart);
+                    }}
+                    aria-label="Xóa chart"
+                    title="Xóa chart"
+                  >
+                    <Trash2 className="h-4 w-4 text-[#b30000]" />
+                  </Button>
+                </div>
               </div>
               <CardContent className="space-y-2 pt-4">
                 <h3 className="line-clamp-2 font-semibold text-[#212121]">
@@ -243,6 +305,20 @@ function GalleryContent() {
                   Lưu lúc {formatDate(viewTarget.created_at)}
                 </DialogDescription>
               </DialogHeader>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    downloadChartPng(viewTarget);
+                    toast.success("Đã tải ảnh PNG");
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Tải PNG
+                </Button>
+              </div>
               <div className="space-y-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -262,14 +338,15 @@ function GalleryContent() {
             </>
           )}
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      </div>
     </div>
   );
 }
 
 export default function GalleryPage() {
   return (
-    <Suspense fallback={<div className="px-10 py-12">Đang tải...</div>}>
+    <Suspense fallback={<div className="h-full px-10 py-12">Đang tải...</div>}>
       <GalleryContent />
     </Suspense>
   );

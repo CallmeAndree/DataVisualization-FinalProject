@@ -6,6 +6,7 @@
 import {
   BarChart as RechartsBarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -27,6 +28,8 @@ interface BarChartProps {
   bars: BarConfig[];
   layout?: "horizontal" | "vertical";
   yFormatter?: (v: number) => string;
+  onBarClick?: (xValue: string | number, barKey: string, value: number) => void;
+  selectedBar?: { x: string | number; key: string };
 }
 
 export function BarChart({
@@ -35,8 +38,13 @@ export function BarChart({
   bars,
   layout = "vertical",
   yFormatter = formatNumber,
+  onBarClick,
+  selectedBar,
 }: BarChartProps) {
   const isHorizontal = layout === "horizontal";
+
+  const isSelected = (entry: Record<string, unknown>, key: string) =>
+    selectedBar ? entry[xKey] === selectedBar.x && key === selectedBar.key : false;
 
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -105,7 +113,24 @@ export function BarChart({
             name={b.label ?? b.key}
             fill={chartColor(b.color, chartPaletteColor(index))}
             radius={isHorizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]}
-          />
+          >
+            {data.map((entry, cellIndex) => {
+              const xValue = entry[xKey] as string | number;
+              const value = Number(entry[b.key] ?? 0);
+              const selected = isSelected(entry, b.key);
+              return (
+                <Cell
+                  key={`${b.key}-${cellIndex}`}
+                  opacity={selectedBar ? (selected ? 1 : 0.5) : 1}
+                  stroke={selected ? CHART_CHROME.emphasis : undefined}
+                  strokeWidth={selected ? 2 : 0}
+                  cursor={onBarClick ? "pointer" : "default"}
+                  onClick={() => onBarClick?.(xValue, b.key, value)}
+                  className="transition-opacity duration-300"
+                />
+              );
+            })}
+          </Bar>
         ))}
       </RechartsBarChart>
     </ResponsiveContainer>

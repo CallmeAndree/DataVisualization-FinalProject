@@ -34,6 +34,8 @@ interface LineChartProps {
   selectedYear?: number | null;
   /** Optional: callback when a data point is clicked */
   onYearClick?: (year: number) => void;
+  onPointClick?: (xValue: string | number, lineKey: string, value: number) => void;
+  selectedPoint?: { x: string | number; key: string };
 }
 
 export function LineChart({
@@ -45,15 +47,14 @@ export function LineChart({
   yFormatter = formatNumber,
   selectedYear,
   onYearClick,
+  onPointClick,
+  selectedPoint,
 }: LineChartProps) {
   const handleClick = (data: unknown) => {
-    if (onYearClick && data && typeof data === "object") {
-      const entry = data as Record<string, unknown>;
-      const year = entry[xKey];
-      if (typeof year === "number") {
-        onYearClick(year);
-      }
-    }
+    if (!onYearClick || !data || typeof data !== "object") return;
+    const entry = data as Record<string, unknown>;
+    const year = entry[xKey];
+    if (typeof year === "number") onYearClick(year);
   };
 
   return (
@@ -114,18 +115,28 @@ export function LineChart({
               stroke={color}
               strokeWidth={2}
               dot={(props) => {
-                const isSelected = selectedYear !== null && props.payload[xKey] === selectedYear;
+                const xValue = props.payload[xKey] as string | number;
+                const value = Number(props.payload[l.key] ?? 0);
+                const isSelected =
+                  (selectedPoint ? selectedPoint.x === xValue && selectedPoint.key === l.key : false) ||
+                  (selectedYear !== null && selectedYear !== undefined && props.payload[xKey] === selectedYear);
                 return (
                   <circle
                     cx={props.cx}
                     cy={props.cy}
-                    r={isSelected ? 6 : 0}
+                    r={isSelected ? 6 : onPointClick ? 3 : 0}
                     fill={color}
-                    stroke={CHART_CHROME.markerStroke}
-                    strokeWidth={2}
+                    stroke={isSelected ? CHART_CHROME.emphasis : CHART_CHROME.markerStroke}
+                    strokeWidth={isSelected ? 3 : 2}
                     className="transition-all duration-300"
                     style={{
+                      cursor: onPointClick ? "pointer" : "default",
+                      opacity: selectedPoint ? (isSelected ? 1 : 0.5) : 1,
                       filter: isSelected ? `drop-shadow(0 0 4px ${REFERENCE_COLORS.selectedShadow})` : "none",
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onPointClick?.(xValue, l.key, value);
                     }}
                   />
                 );
@@ -135,6 +146,7 @@ export function LineChart({
                 fill: color,
                 stroke: CHART_CHROME.markerStroke,
                 strokeWidth: 2,
+                style: { cursor: onPointClick ? "pointer" : "default" },
               }}
             />
           );

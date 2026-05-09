@@ -99,7 +99,7 @@ function OverviewContent() {
 
   if (loading) {
     return (
-      <div className="px-10 py-12">
+      <div className="h-full px-10 py-12">
         <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p>
       </div>
     );
@@ -107,15 +107,16 @@ function OverviewContent() {
 
   if (!rawData || !kpis) {
     return (
-      <div className="px-10 py-12">
+      <div className="h-full px-10 py-12">
         <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p>
       </div>
     );
   }
 
   return (
-    <div className="px-10 py-12">
-      <header className="mb-8">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 px-10 pt-12">
+        <header className="mb-8">
         <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>Bảng điều khiển</p>
         <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>
           Tổng Quan
@@ -126,19 +127,21 @@ function OverviewContent() {
         <p className={`mt-3 max-w-3xl ${TEXT_COLORS.slate}`}>
           Chỉ số tổng quan và phân bố theo danh mục. Click vào biểu đồ để lọc theo danh mục và năm.
         </p>
-      </header>
+        </header>
 
-      {hasActiveFilters && (
-        <div className="mb-6">
-          <FilterBadges
-            filters={filters}
-            onClearFilter={clearFilter}
-            onClearAll={clearAllFilters}
-          />
-        </div>
-      )}
+        {hasActiveFilters && (
+          <div className="mb-6">
+            <FilterBadges
+              filters={filters}
+              onClearFilter={clearFilter}
+              onClearAll={clearAllFilters}
+            />
+          </div>
+        )}
+      </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300">
+      <div className="min-h-0 flex-1 overflow-y-auto px-10 pb-12">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300">
         <KPICard label="Tổng số kênh" value={kpis.total_channels} loading={loading} />
         <KPICard label="Tổng số video" value={formatNumber(kpis.total_videos)} loading={loading} />
         <KPICard label="Tổng lượt xem" value={formatNumber(kpis.total_views)} loading={loading} />
@@ -147,9 +150,9 @@ function OverviewContent() {
           value={`${Math.round(kpis.short_form_ratio * 100)}%`}
           loading={loading}
         />
-      </div>
+        </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
         <ChartCard title="A1: Phân bố theo danh mục" description="Click để lọc">
           <PieDonut
             data={categoryPieData}
@@ -171,9 +174,9 @@ function OverviewContent() {
             onYearClick={(year) => updateFilter("year", year)}
           />
         </ChartCard>
-      </div>
+        </div>
 
-      <div className="mb-8 transition-all duration-500">
+        <div className="mb-8 transition-all duration-500">
         <ChartCard
           title="A3: Tỉ lệ video ngắn và video dài theo năm"
           description={filters.category ? `Lọc: ${labelCategory(filters.category)}` : "Tất cả danh mục"}
@@ -194,14 +197,15 @@ function OverviewContent() {
             onYearClick={(year) => updateFilter("year", year)}
           />
         </ChartCard>
-      </div>
+        </div>
 
-      <InsightCard
-        content={insight}
-        loading={insightLoading}
-        error={insightError}
-        onGetInsight={handleGetInsight}
-      />
+        <InsightCard
+          content={insight}
+          loading={insightLoading}
+          error={insightError}
+          onGetInsight={handleGetInsight}
+        />
+      </div>
     </div>
   );
 }

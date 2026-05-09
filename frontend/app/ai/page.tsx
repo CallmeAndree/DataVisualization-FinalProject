@@ -41,19 +41,15 @@ export default function AIWorkspacePage() {
   // Use streaming hook
   const streaming = useStreamingResponse({
     enableStreaming,
-    onComplete: (requestId) => {
-      if (requestId) {
-        setRequest((prev) =>
-          prev
-            ? { ...prev, id: requestId, status: "pending" }
-            : {
-                id: requestId,
-                ai_code: streaming.code,
-                edited_code: null,
-                explanation: streaming.explanation,
-                status: "pending",
-              }
-        );
+    onComplete: (payload) => {
+      if (payload.requestId) {
+        setRequest({
+          id: payload.requestId,
+          ai_code: payload.code,
+          edited_code: null,
+          explanation: payload.explanation,
+          status: "pending",
+        });
       }
       toast.success("Code đã được sinh!");
     },
@@ -152,36 +148,40 @@ export default function AIWorkspacePage() {
   // Show skeleton when waiting for first chunk
   const showSkeleton = streaming.isStreaming && !streaming.code;
 
-  // Sync request state with streaming progress in an effect to avoid state updates during render
+  // Sync request state with streaming progress after paint to avoid state updates during render.
   useEffect(() => {
     if (!streaming.isStreaming || !streaming.code) {
       return;
     }
 
-    setRequest((prev) => {
-      if (!prev) {
-        return {
-          id: streaming.requestId || "",
-          ai_code: streaming.code,
-          edited_code: null,
-          explanation: streaming.explanation,
-          status: "generating",
-        };
-      }
+    const timer = window.setTimeout(() => {
+      setRequest((prev) => {
+        if (!prev) {
+          return {
+            id: streaming.requestId || "",
+            ai_code: streaming.code,
+            edited_code: null,
+            explanation: streaming.explanation,
+            status: "generating",
+          };
+        }
 
-      if (
-        prev.ai_code !== streaming.code ||
-        prev.explanation !== streaming.explanation
-      ) {
-        return {
-          ...prev,
-          ai_code: streaming.code,
-          explanation: streaming.explanation,
-        };
-      }
+        if (
+          prev.ai_code !== streaming.code ||
+          prev.explanation !== streaming.explanation
+        ) {
+          return {
+            ...prev,
+            ai_code: streaming.code,
+            explanation: streaming.explanation,
+          };
+        }
 
-      return prev;
-    });
+        return prev;
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [streaming.isStreaming, streaming.code, streaming.explanation, streaming.requestId]);
 
   return (

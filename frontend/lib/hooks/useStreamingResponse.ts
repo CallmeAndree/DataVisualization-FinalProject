@@ -10,8 +10,14 @@ export interface StreamingState {
   requestId: string | null;
 }
 
+export interface StreamingPayload {
+  code: string;
+  explanation: string;
+  requestId: string | null;
+}
+
 export interface UseStreamingResponseOptions {
-  onComplete?: (requestId: string) => void;
+  onComplete?: (payload: StreamingPayload) => void;
   onError?: (error: string) => void;
   maxRetries?: number;
   enableStreaming?: boolean;
@@ -39,6 +45,11 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
+  const latestPayloadRef = useRef<StreamingPayload>({
+    code: "",
+    explanation: "",
+    requestId: null,
+  });
 
   // Cleanup on unmount
   useEffect(() => {
@@ -85,16 +96,22 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
         }
 
         const data = await response.json();
-        setState({
-          isStreaming: false,
+        const payload: StreamingPayload = {
           code: data.code || "",
           explanation: data.explanation || "",
-          error: null,
           requestId: data.request_id || null,
+        };
+        latestPayloadRef.current = payload;
+        setState({
+          isStreaming: false,
+          code: payload.code,
+          explanation: payload.explanation,
+          error: null,
+          requestId: payload.requestId,
         });
 
-        if (onComplete && data.request_id) {
-          onComplete(data.request_id);
+        if (onComplete && payload.requestId) {
+          onComplete(payload);
         }
       } catch (error: unknown) {
         const errorMsg =
@@ -126,6 +143,11 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
       // Internal retry function
       const attemptStream = async (): Promise<void> => {
         // Reset state
+        latestPayloadRef.current = {
+          code: "",
+          explanation: "",
+          requestId: null,
+        };
         setState({
           isStreaming: true,
           code: "",
@@ -199,10 +221,17 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
                 }
                 try {
                   const parsed = JSON.parse(data);
+                  const payload: StreamingPayload = {
+                    code: parsed.code || latestPayloadRef.current.code,
+                    explanation:
+                      parsed.explanation || latestPayloadRef.current.explanation,
+                    requestId: latestPayloadRef.current.requestId,
+                  };
+                  latestPayloadRef.current = payload;
                   setState((prev) => ({
                     ...prev,
-                    code: parsed.code || prev.code,
-                    explanation: parsed.explanation || prev.explanation,
+                    code: payload.code || prev.code,
+                    explanation: payload.explanation || prev.explanation,
                   }));
                 } catch {
                   console.warn("Failed to parse SSE data:", data);
@@ -217,14 +246,21 @@ export function useStreamingResponse(options: UseStreamingResponseOptions = {}) 
                   }
                   try {
                     const doneData = JSON.parse(donePayload);
-                    const requestId = doneData.request_id;
+                    const requestId = doneData.request_id || null;
+                    const payload: StreamingPayload = {
+                      ...latestPayloadRef.current,
+                      requestId,
+                    };
+                    latestPayloadRef.current = payload;
                     setState((prev) => ({
                       ...prev,
                       isStreaming: false,
+                      code: payload.code || prev.code,
+                      explanation: payload.explanation || prev.explanation,
                       requestId,
                     }));
                     if (onComplete && requestId) {
-                      onComplete(requestId);
+                      onComplete(payload);
                     }
                   } catch {
                     console.warn("Failed to parse done event data:", donePayload);

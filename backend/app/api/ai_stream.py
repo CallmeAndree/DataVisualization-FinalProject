@@ -2,6 +2,7 @@
 SSE streaming endpoint for AI code generation.
 Streams code chunks progressively to provide real-time feedback.
 """
+import json
 import uuid
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -40,28 +41,36 @@ async def generate_stream(req: GenerateStreamRequest):
             # Initialize Gemini client
             client = GeminiClient(api_key=settings.GEMINI_API_KEY, model_name=settings.GEMINI_MODEL)
 
-            # Accumulate full response for logging
+            # Accumulate final authoritative response for logging.
             full_code = ""
             full_explanation = ""
 
-            # Stream code generation
+            # Stream code generation. GeminiClient emits the final parsed payload.
             async for chunk in client.generate_stream(
                 prompt=req.prompt,
                 data_context=req.data_context or {},
             ):
-                # Send SSE data event
-                yield f"data: {chunk}\n\n"
-
-                # Parse chunk to accumulate
-                import json
                 try:
                     parsed = json.loads(chunk)
-                    full_code = parsed.get("code", full_code)
-                    full_explanation = parsed.get("explanation", full_explanation)
                 except json.JSONDecodeError:
-                    pass
+                    continue
 
-            # Log the completed request
+                full_code = parsed.get("code", full_code) or full_code
+                full_explanation = parsed.get("explanation", full_explanation) or full_explanation
+
+                if not full_code.strip():
+                    error_msg = full_explanation or "Không thể sinh code từ Gemini"
+                    yield f"event: error\ndata: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
+                    return
+
+                # Send authoritative final SSE data event before done.
+                yield f"data: {json.dumps({'code': full_code, 'explanation': full_explanation}, ensure_ascii=False)}\n\n"
+
+            if not full_code.strip():
+                yield f"event: error\ndata: {json.dumps({'error': 'Gemini không trả về code hợp lệ'}, ensure_ascii=False)}\n\n"
+                return
+
+            # Log the completed request with the same code emitted to the client.
             await insert_request(
                 request_id=request_id,
                 user_prompt=req.prompt,

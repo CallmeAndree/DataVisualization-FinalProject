@@ -2,8 +2,10 @@
 /**
  * Economy Page — RO5: Quy Mô Kênh vs. Chiến Lược.
  */
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { api, type EconomyData } from "@/lib/api";
+import { MultiDimensionalFilterProvider, useMultiDimensionalFilter } from "@/app/MultiDimensionalFilterContext";
+import { FilterBadges } from "@/components/dashboard/FilterBadges";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
@@ -19,10 +21,10 @@ function scaleSizes(values: number[], min = 28, max = 90): number[] {
   return safe.map((v) => min + ((v - lo) / (hi - lo)) * (max - min));
 }
 
-export default function EconomyPage() {
+function EconomyContent() {
+  const { filters, updateFilter, clearFilter, clearAllFilters, hasActiveFilters } = useMultiDimensionalFilter();
   const [data, setData] = useState<EconomyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [insight, setInsight] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightError, setInsightError] = useState("");
@@ -31,13 +33,13 @@ export default function EconomyPage() {
     const timer = setTimeout(() => {
       setLoading(true);
       api
-        .economy({ categories: selectedCategories.length ? selectedCategories.join(",") : undefined })
+        .economy({ categories: filters.category ?? undefined })
         .then(setData)
         .catch((err) => console.error("Failed to load RO5 data:", err))
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(timer);
-  }, [selectedCategories]);
+  }, [filters.category]);
 
   const resetInsight = () => {
     setInsight("");
@@ -45,9 +47,27 @@ export default function EconomyPage() {
   };
 
   const toggleCategory = (cat: string) => {
-    setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
+    updateFilter("category", cat);
     resetInsight();
   };
+
+  const filteredScatter = useMemo(() => {
+    if (!data) return [];
+    return data.f1_subscriber_engagement_scatter.filter((point) => {
+      const categoryMatches = !filters.category || point.category === filters.category;
+      const channelMatches = !filters.channel || point.channel_name === filters.channel;
+      return categoryMatches && channelMatches;
+    });
+  }, [data, filters.category, filters.channel]);
+
+  const filteredQuadrant = useMemo(() => {
+    if (!data) return [];
+    return data.f2_strategy_quadrant.points.filter((point) => {
+      const categoryMatches = !filters.category || point.category === filters.category;
+      const channelMatches = !filters.channel || point.channel_name === filters.channel;
+      return categoryMatches && channelMatches;
+    });
+  }, [data, filters.category, filters.channel]);
 
   const handleGetInsight = async () => {
     if (!data) return;
@@ -56,8 +76,8 @@ export default function EconomyPage() {
     try {
       const response = await api.generateInsight({
         page: "economy",
-        filters: { categories: selectedCategories },
-        summary: data,
+        filters: { categories: filters.category ? [filters.category] : [], category: filters.category, channel: filters.channel },
+        summary: { scatter: filteredScatter, quadrant: filteredQuadrant },
       });
       setInsight(response.insight);
     } catch (error) {
@@ -68,17 +88,16 @@ export default function EconomyPage() {
   };
 
   const handleReset = () => {
-    setSelectedCategories([]);
+    clearAllFilters();
     resetInsight();
   };
 
   const categories = data?.categories.length ? data.categories : CATEGORIES;
-  // Balanced bubble ranges for readable data points without overwhelming the Economy charts.
-  const scatterSizes = data ? scaleSizes(data.f1_subscriber_engagement_scatter.map((point) => point.total_view_count), 12, 42) : [];
-  const quadrantSizes = data ? scaleSizes(data.f2_strategy_quadrant.points.map((point) => point.subscriber_count), 14, 48) : [];
+  const scatterSizes = scaleSizes(filteredScatter.map((point) => point.total_view_count), 12, 42);
+  const quadrantSizes = scaleSizes(filteredQuadrant.map((point) => point.subscriber_count), 14, 48);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</span>
@@ -86,7 +105,7 @@ export default function EconomyPage() {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs border transition-colors ${selectedCategories.includes(cat) ? "bg-[#003c33] text-white border-[#003c33]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${filters.category === cat ? "bg-[#003c33] text-white border-[#003c33]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
             >
               {labelCategory(cat)}
             </button>
@@ -94,26 +113,29 @@ export default function EconomyPage() {
         </div>
       </FilterBar>
 
-      <div className="flex-1 overflow-y-auto px-10 py-8">
+      <div className="min-h-0 flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
           <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO5</p>
           <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Quy Mô Kênh vs. Chiến Lược</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
-            Đánh giá mối quan hệ giữa quy mô người đăng ký, tương tác trung bình và chiến lược đăng tải của từng kênh YouTube.
+            Đánh giá mối quan hệ giữa quy mô người đăng ký, tương tác trung bình và chiến lược đăng tải của từng kênh YouTube. Click để lọc.
           </p>
         </header>
 
+        {hasActiveFilters && <div className="mb-6"><FilterBadges filters={filters} onClearFilter={clearFilter} onClearAll={clearAllFilters} /></div>}
+
         {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
-            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <ChartCard title="B1: Subscriber count vs. engagement rate" description="Kích thước điểm biểu thị total view count">
+            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
+              <ChartCard title="B1: Subscriber count vs. engagement rate" description="Click điểm để lọc theo kênh + danh mục">
                 <ScatterPlotly
                   traces={categories.map((cat) => {
-                    const points = data.f1_subscriber_engagement_scatter
+                    const points = filteredScatter
                       .map((point, index) => ({ ...point, markerSize: scatterSizes[index] }))
                       .filter((point) => point.category === cat);
                     return {
                       name: labelCategory(cat),
+                      category: cat,
                       x: points.map((point) => point.subscriber_count),
                       y: points.map((point) => point.avg_engagement_rate),
                       text: points.map((point) => point.channel_name),
@@ -125,17 +147,23 @@ export default function EconomyPage() {
                   xLabel="Số người đăng ký (log)"
                   yLabel="Average engagement rate"
                   height={360}
+                  onPointClick={(point) => {
+                    updateFilter("channel", point.name);
+                    if (point.category) updateFilter("category", point.category);
+                  }}
+                  selectedPoint={filters.channel ? { name: filters.channel } : undefined}
                 />
               </ChartCard>
 
-              <ChartCard title="B2: Posting strategy quadrant" description="X: số video trong dataset, Y: lượt xem trung bình/video, bubble size: subscriber count">
+              <ChartCard title="B2: Posting strategy quadrant" description="Click điểm để lọc theo kênh + danh mục">
                 <ScatterPlotly
                   traces={categories.map((cat) => {
-                    const points = data.f2_strategy_quadrant.points
+                    const points = filteredQuadrant
                       .map((point, index) => ({ ...point, markerSize: quadrantSizes[index] }))
                       .filter((point) => point.category === cat);
                     return {
                       name: labelCategory(cat),
+                      category: cat,
                       x: points.map((point) => point.video_count_dataset),
                       y: points.map((point) => point.avg_views_per_video_dataset),
                       text: points.map((point) => point.channel_name),
@@ -149,6 +177,11 @@ export default function EconomyPage() {
                   referenceX={data.f2_strategy_quadrant.median_x}
                   referenceY={data.f2_strategy_quadrant.median_y}
                   quadrantLabels={["Ít video / view cao", "Nhiều video / view cao", "Ít video / view thấp", "Nhiều video / view thấp"]}
+                  onPointClick={(point) => {
+                    updateFilter("channel", point.name);
+                    if (point.category) updateFilter("category", point.category);
+                  }}
+                  selectedPoint={filters.channel ? { name: filters.channel } : undefined}
                 />
               </ChartCard>
             </div>
@@ -158,5 +191,15 @@ export default function EconomyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EconomyPage() {
+  return (
+    <Suspense fallback={<div className="px-10 py-12"><p className={TEXT_COLORS.muted}>Đang tải bộ lọc...</p></div>}>
+      <MultiDimensionalFilterProvider>
+        <EconomyContent />
+      </MultiDimensionalFilterProvider>
+    </Suspense>
   );
 }

@@ -6,6 +6,7 @@
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,9 +26,14 @@ interface StackedBarChartProps {
   data: Record<string, unknown>[];
   xKey: string;
   bars: BarConfig[];
+  onSegmentClick?: (xValue: string | number, segmentKey: string, value: number) => void;
+  selectedSegment?: { x: string | number; key: string };
 }
 
-export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
+export function StackedBarChart({ data, xKey, bars, onSegmentClick, selectedSegment }: StackedBarChartProps) {
+  const isSelected = (entry: Record<string, unknown>, key: string) =>
+    selectedSegment ? entry[xKey] === selectedSegment.x && key === selectedSegment.key : false;
+
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
@@ -70,7 +76,24 @@ export function StackedBarChart({ data, xKey, bars }: StackedBarChartProps) {
             stackId="stack"
             fill={chartColor(b.color, chartPaletteColor(index))}
             radius={[2, 2, 0, 0]}
-          />
+          >
+            {data.map((entry, cellIndex) => {
+              const xValue = entry[xKey] as string | number;
+              const value = Number(entry[b.key] ?? 0);
+              const selected = isSelected(entry, b.key);
+              return (
+                <Cell
+                  key={`${b.key}-${cellIndex}`}
+                  opacity={selectedSegment ? (selected ? 1 : 0.5) : 1}
+                  stroke={selected ? CHART_CHROME.emphasis : undefined}
+                  strokeWidth={selected ? 2 : 0}
+                  cursor={onSegmentClick ? "pointer" : "default"}
+                  onClick={() => onSegmentClick?.(xValue, b.key, value)}
+                  className="transition-opacity duration-300"
+                />
+              );
+            })}
+          </Bar>
         ))}
       </BarChart>
     </ResponsiveContainer>

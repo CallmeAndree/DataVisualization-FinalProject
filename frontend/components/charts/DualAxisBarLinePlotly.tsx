@@ -22,6 +22,8 @@ interface DualAxisBarLinePlotlyProps {
   barLabel?: string;
   lineLabel?: string;
   height?: number;
+  onBarClick?: (xValue: string | number, value: number) => void;
+  selectedBar?: { x: string | number };
 }
 
 export function DualAxisBarLinePlotly({
@@ -36,9 +38,13 @@ export function DualAxisBarLinePlotly({
   barLabel,
   lineLabel,
   height = 340,
+  onBarClick,
+  selectedBar,
 }: DualAxisBarLinePlotlyProps) {
   const safeBarColor = chartColor(barColor, CHART_PALETTE[2]);
   const safeLineColor = chartColor(lineColor, REFERENCE_COLORS.viral);
+  const barOpacity = x.map((value) => (selectedBar ? (value === selectedBar.x ? 1 : 0.45) : 0.82));
+  const barLineWidths = x.map((value) => (selectedBar && value === selectedBar.x ? 2.5 : 0));
 
   return (
     <Plot
@@ -48,7 +54,11 @@ export function DualAxisBarLinePlotly({
           name: barName,
           x,
           y: barY,
-          marker: { color: safeBarColor, opacity: 0.82 },
+          marker: {
+            color: safeBarColor,
+            opacity: barOpacity,
+            line: { color: CHART_CHROME.emphasis, width: barLineWidths },
+          },
           hovertemplate: "%{x}<br>%{y:,} video<extra></extra>",
         } as Plotly.Data,
         {
@@ -70,6 +80,8 @@ export function DualAxisBarLinePlotly({
         margin: { t: 8, r: 64, b: 70, l: 60 },
         font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         legend: { orientation: "h", y: 1.08, x: 0, font: { size: 11, color: CHART_CHROME.legend } },
+        hovermode: "closest",
+        dragmode: false,
         xaxis: {
           title: xLabel ? { text: xLabel } : undefined,
           showgrid: false,
@@ -94,7 +106,12 @@ export function DualAxisBarLinePlotly({
         },
       }}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%" }}
+      style={{ width: "100%", cursor: onBarClick ? "pointer" : "default" }}
+      onClick={(event) => {
+        const point = event.points?.[0];
+        if (!point || !onBarClick || point.curveNumber !== 0) return;
+        onBarClick(point.x as string | number, Number(point.y ?? 0));
+      }}
       useResizeHandler
     />
   );

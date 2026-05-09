@@ -69,6 +69,12 @@ Truy cập: **http://localhost:3000**
 - **Interaction**: Engagement rate analysis, golden hour heatmap
 - **Economy**: Commercial video trends, revenue analysis
 
+### 🔎 Interactive Filtering
+- Click chart elements to apply filters directly from visuals across Overview, Short-form, Channels, Interaction, Economy, and Anomaly tabs.
+- Active filters are synchronized to the URL, so filtered dashboard states can be shared, bookmarked, and restored with browser back/forward navigation.
+- Supported URL parameters: `category`, `year`, `viewMin`, `viewMax`, `videoMin`, `videoMax`, `duration`, `hour`, `dayOfWeek`, `channel`, `subscriberMin`, `subscriberMax`, and `viralThreshold`.
+- Filter badges below each page header show the active filter set and can clear individual filters or reset all filters.
+
 ### 🤖 AI Module
 - Natural language → Python code generation (Gemini)
 - Monaco editor with syntax highlighting

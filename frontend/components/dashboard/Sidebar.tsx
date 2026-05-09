@@ -27,7 +27,7 @@ const items = [
   { href: "/economy",     label: "Quy mô & chiến lược",     icon: ShoppingCart },
   { href: "/ai",          label: "Không gian AI",          icon: Sparkles },
   { href: "/gallery",     label: "Bộ sưu tập",             icon: Images },
-  { href: "/logs",        label: "Nhật ký kiểm duyệt",     icon: ScrollText },
+  { href: "/audit",       label: "Nhật ký kiểm duyệt",     icon: ScrollText },
 ];
 
 export function Sidebar() {
@@ -35,7 +35,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="flex w-64 shrink-0 flex-col px-3 py-6"
+      className="flex h-screen w-64 shrink-0 flex-col overflow-hidden px-3 py-6"
       style={{ background: "#17171c", borderRight: "1px solid rgba(255,255,255,0.08)" }}
     >
       {/* Brand */}

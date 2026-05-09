@@ -21,7 +21,7 @@ Verify all routes load without errors:
 - [ ] `/interaction` - Interaction paradox page loads
 - [ ] `/economy` - Creator economy page loads
 - [ ] `/ai` - AI workspace page loads
-- [ ] `/logs` - Audit logs page loads
+- [ ] `/audit` - Audit logs page loads
 
 ---
 
@@ -148,7 +148,7 @@ Verify all routes load without errors:
 
 ---
 
-## 9. Logs Page (`/logs`)
+## 9. Audit Page (`/audit`)
 
 ### Components
 - [ ] Request history table displays

@@ -26,6 +26,7 @@ interface BoxPlotlyProps {
   baseline?: number;
   baselineLabel?: string;
   percent?: boolean;
+  onOutlierClick?: (point: unknown) => void;
 }
 
 export function BoxPlotly({
@@ -36,6 +37,7 @@ export function BoxPlotly({
   baseline,
   baselineLabel = "Baseline",
   percent = false,
+  onOutlierClick,
 }: BoxPlotlyProps) {
   return (
     <Plot
@@ -43,21 +45,21 @@ export function BoxPlotly({
         const color = chartColor(t.color, chartPaletteColor(index));
 
         return ({
-        type: "box",
-        name: t.name,
-        y: t.y,
-        text: t.text,
-        boxmean: showPoints ? "sd" : true,
-        boxpoints: showPoints ? "all" : false,
-        jitter: showPoints ? 0.35 : 0,
-        pointpos: showPoints ? 0 : undefined,
-        hovertemplate: percent
-          ? "%{x}<br>%{text}<br>%{y:.2%}<extra></extra>"
-          : "%{x}<br>%{text}<br>%{y}<extra></extra>",
-        marker: { color, opacity: 0.75, size: 6 },
-        line: { color },
-        fillcolor: `${color}30`,
-      } as Plotly.Data);
+          type: "box",
+          name: t.name,
+          y: t.y,
+          text: t.text,
+          boxmean: showPoints ? "sd" : true,
+          boxpoints: showPoints ? "all" : false,
+          jitter: showPoints ? 0.35 : 0,
+          pointpos: showPoints ? 0 : undefined,
+          hovertemplate: percent
+            ? "%{x}<br>%{text}<br>%{y:.2%}<extra></extra>"
+            : "%{x}<br>%{text}<br>%{y}<extra></extra>",
+          marker: { color, opacity: 0.75, size: 6, line: { color: CHART_CHROME.markerStroke, width: onOutlierClick ? 0.75 : 0 } },
+          line: { color },
+          fillcolor: `${color}30`,
+        } as Plotly.Data);
       })}
       layout={{
         paper_bgcolor: CHART_CHROME.paper,
@@ -66,6 +68,8 @@ export function BoxPlotly({
         margin: { t: 8, r: 8, b: 60, l: 60 },
         font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         showlegend: false,
+        hovermode: "closest",
+        dragmode: false,
         xaxis: {
           showgrid: false,
           tickfont: { size: 11, color: CHART_CHROME.axis },
@@ -100,7 +104,18 @@ export function BoxPlotly({
         }] : undefined,
       }}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%" }}
+      style={{ width: "100%", cursor: onOutlierClick ? "pointer" : "default" }}
+      onClick={(event) => {
+        const point = event.points?.[0];
+        if (!point || !onOutlierClick) return;
+        onOutlierClick({
+          category: point.x,
+          value: point.y,
+          text: point.text,
+          curveNumber: point.curveNumber,
+          pointNumber: point.pointNumber,
+        });
+      }}
       useResizeHandler
     />
   );

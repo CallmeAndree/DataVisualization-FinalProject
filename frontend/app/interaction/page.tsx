@@ -2,8 +2,10 @@
 /**
  * Interaction Page — RO3: Giờ Vàng Đăng Video.
  */
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { api, type InteractionData } from "@/lib/api";
+import { MultiDimensionalFilterProvider, useMultiDimensionalFilter } from "@/app/MultiDimensionalFilterContext";
+import { FilterBadges } from "@/components/dashboard/FilterBadges";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
@@ -16,17 +18,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, CATEGORY_COLORS, ENTERTAINMENT_HEATMAP_COLORSCALE, DURATION_ORDER, labelCategory, labelDuration, formatNumber } from "@/lib/constants";
+import { CATEGORIES, CATEGORY_COLORS, ENTERTAINMENT_HEATMAP_COLORSCALE, DURATION_ORDER, DAY_LABELS, labelCategory, labelDuration, formatNumber } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
 
-export default function InteractionPage() {
+function InteractionContent() {
+  const { filters, updateFilter, clearFilter, clearAllFilters, hasActiveFilters } = useMultiDimensionalFilter();
   const [data, setData] = useState<InteractionData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [durationGroup, setDurationGroup] = useState<string | null>("All");
   const [insight, setInsight] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightError, setInsightError] = useState("");
+  const selectedCategories = useMemo(() => filters.category ? [filters.category] : [], [filters.category]);
+  const durationGroup = filters.duration ?? "All";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,9 +52,32 @@ export default function InteractionPage() {
   };
 
   const toggleCategory = (cat: string) => {
-    setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
+    updateFilter("category", cat);
     resetInsight();
   };
+
+  const filteredHeatmap = useMemo(() => {
+    if (!data) return null;
+    const hours = data.e2_heatmap.hours
+      .map((hour, index) => ({ hour, index }))
+      .filter(({ hour }) => filters.hour === null || hour === filters.hour);
+    const days = data.e2_heatmap.days
+      .map((day, index) => ({ day, index }))
+      .filter((_, index) => filters.day_of_week === null || index === filters.day_of_week);
+
+    return {
+      hours: hours.map(({ hour }) => hour),
+      days: days.map(({ day }) => day),
+      z: days.map(({ index: dayIndex }) =>
+        hours.map(({ index: hourIndex }) => data.e2_heatmap.z[dayIndex]?.[hourIndex] ?? 0)
+      ),
+    };
+  }, [data, filters.hour, filters.day_of_week]);
+
+  const filteredLineData = useMemo(() => {
+    if (!data) return [];
+    return data.e1_hour_category_video_count.filter((row) => filters.hour === null || row.hour === filters.hour);
+  }, [data, filters.hour]);
 
   const handleGetInsight = async () => {
     if (!data) return;
@@ -60,10 +86,15 @@ export default function InteractionPage() {
     try {
       const response = await api.generateInsight({
         page: "interaction",
-        filters: { categories: selectedCategories, duration_group: durationGroup === "All" ? null : durationGroup },
+        filters: {
+          categories: selectedCategories,
+          duration_group: filters.duration,
+          hour: filters.hour,
+          day_of_week: filters.day_of_week,
+        },
         summary: {
-          heatmap: data.e2_heatmap,
-          hour_category_video_count: data.e1_hour_category_video_count,
+          heatmap: filteredHeatmap,
+          hour_category_video_count: filteredLineData,
         },
       });
       setInsight(response.insight);
@@ -75,15 +106,14 @@ export default function InteractionPage() {
   };
 
   const handleReset = () => {
-    setSelectedCategories([]);
-    setDurationGroup("All");
+    clearAllFilters();
     resetInsight();
   };
 
   const lineCategories = data?.categories.length ? data.categories : CATEGORIES;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col">
       <FilterBar onReset={handleReset}>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</span>
@@ -100,7 +130,7 @@ export default function InteractionPage() {
 
         <div className="flex items-center gap-2">
           <label className={`text-sm ${TEXT_COLORS.slate}`}>Thời lượng:</label>
-          <Select value={durationGroup} onValueChange={(value) => { setDurationGroup(value); resetInsight(); }}>
+          <Select value={durationGroup} onValueChange={(value) => { updateFilter("duration", value === "All" ? null : value); resetInsight(); }}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="All">Tất cả</SelectItem>
@@ -110,37 +140,46 @@ export default function InteractionPage() {
         </div>
       </FilterBar>
 
-      <div className="flex-1 overflow-y-auto px-10 py-8">
+      <div className="min-h-0 flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
           <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO3</p>
           <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Giờ Vàng Đăng Video</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
-            Xác định khung giờ và ngày đăng hiệu quả bằng heatmap lượt xem trung vị và xu hướng số lượng video theo giờ của từng danh mục.
+            Xác định khung giờ và ngày đăng hiệu quả bằng heatmap lượt xem trung vị và xu hướng số lượng video theo giờ của từng danh mục. Click để lọc.
           </p>
         </header>
 
-        {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
+        {hasActiveFilters && <div className="mb-6"><FilterBadges filters={filters} onClearFilter={clearFilter} onClearAll={clearAllFilters} /></div>}
+
+        {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data || !filteredHeatmap ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
-            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <ChartCard title="B1: Heatmap lượt xem trung vị theo ngày và giờ" description="Median view_count theo ngày trong tuần và giờ đăng">
+            <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
+              <ChartCard title="B1: Heatmap lượt xem trung vị theo ngày và giờ" description="Click để lọc theo ngày + giờ">
                 <HeatmapPlotly
-                  z={data.e2_heatmap.z}
-                  x={data.e2_heatmap.hours.map(String)}
-                  y={data.e2_heatmap.days}
+                  z={filteredHeatmap.z}
+                  x={filteredHeatmap.hours.map(String)}
+                  y={filteredHeatmap.days}
                   colorscale={ENTERTAINMENT_HEATMAP_COLORSCALE}
                   reversescale={false}
                   xLabel="Giờ đăng"
                   yLabel="Ngày trong tuần"
                   height={340}
+                  onCellClick={(x, y) => {
+                    updateFilter("hour", Number(x));
+                    updateFilter("day_of_week", DAY_LABELS.findIndex((label) => label === y));
+                  }}
+                  selectedCell={filters.hour !== null && filters.day_of_week !== null ? { x: String(filters.hour), y: DAY_LABELS[filters.day_of_week] } : undefined}
                 />
               </ChartCard>
 
-              <ChartCard title="B2: Số lượng video theo giờ đăng" description="Mỗi đường biểu diễn một danh mục nội dung">
+              <ChartCard title="B2: Số lượng video theo giờ đăng" description="Click điểm để lọc theo giờ">
                 <LineChart
-                  data={data.e1_hour_category_video_count}
+                  data={filteredLineData}
                   xKey="hour"
                   yFormatter={formatNumber}
                   lines={lineCategories.map((cat) => ({ key: cat, label: labelCategory(cat), color: CATEGORY_COLORS[cat] }))}
+                  onPointClick={(xValue) => updateFilter("hour", Number(xValue))}
+                  selectedPoint={filters.hour !== null ? { x: filters.hour, key: lineCategories[0] } : undefined}
                 />
               </ChartCard>
             </div>
@@ -150,5 +189,15 @@ export default function InteractionPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function InteractionPage() {
+  return (
+    <Suspense fallback={<div className="px-10 py-12"><p className={TEXT_COLORS.muted}>Đang tải bộ lọc...</p></div>}>
+      <MultiDimensionalFilterProvider>
+        <InteractionContent />
+      </MultiDimensionalFilterProvider>
+    </Suspense>
   );
 }

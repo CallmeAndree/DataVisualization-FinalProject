@@ -10,32 +10,61 @@ from app.services.llm.base import LLMClient
 from app.services.llm.prompts import build_system_prompt, schema_dict_to_text
 
 _PLACEHOLDER_KEYS = {"", "your-key-here", "changeme", "placeholder"}
-_FENCE_RE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
+_FENCE_RE = re.compile(r"```(?:json|JSON)?\s*(.*?)\s*```", re.DOTALL)
 
 
-def _strip_fence(text: str) -> str:
-    text = text.strip()
-    m = _FENCE_RE.match(text)
-    if m:
-        return m.group(1).strip()
-    return text
+def _coerce_generation_payload(data: Any) -> dict[str, str] | None:
+    if not isinstance(data, dict) or "code" not in data:
+        return None
+    return {
+        "code": str(data.get("code") or ""),
+        "explanation": str(data.get("explanation") or ""),
+    }
+
+
+def _json_candidates(text: str) -> list[str]:
+    cleaned = text.strip()
+    candidates: list[str] = []
+
+    for match in _FENCE_RE.finditer(cleaned):
+        fenced = match.group(1).strip()
+        if fenced:
+            candidates.append(fenced)
+
+    if cleaned:
+        candidates.append(cleaned)
+
+    decoder = json.JSONDecoder()
+    for start, char in enumerate(cleaned):
+        if char != "{":
+            continue
+        try:
+            _, end = decoder.raw_decode(cleaned[start:])
+        except json.JSONDecodeError:
+            continue
+        candidates.append(cleaned[start : start + end])
+
+    return candidates
+
+
+def _extract_generation_payload(text: str) -> dict[str, str]:
+    for candidate in _json_candidates(text):
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        payload = _coerce_generation_payload(parsed)
+        if payload is not None:
+            return payload
+
+    return {
+        "code": "",
+        "explanation": f"Lỗi parse response từ Gemini: {text.strip()[:200]!r}",
+    }
 
 
 def _parse_response(text: str) -> dict[str, str]:
-    cleaned = _strip_fence(text)
-    try:
-        data = json.loads(cleaned)
-        if isinstance(data, dict) and "code" in data:
-            return {
-                "code": str(data.get("code", "")),
-                "explanation": str(data.get("explanation", "")),
-            }
-        return {"code": "", "explanation": f"Lỗi parse response từ Gemini: {cleaned[:200]!r}"}
-    except json.JSONDecodeError as e:
-        return {
-            "code": "",
-            "explanation": f"Lỗi parse response từ Gemini: {e!r}",
-        }
+    return _extract_generation_payload(text)
 
 
 class GeminiClient(LLMClient):
@@ -108,18 +137,13 @@ class GeminiClient(LLMClient):
             )
 
             accumulated_text = ""
-            last_parsed: dict[str, str] | None = None
             async for chunk in response:
                 chunk_text = getattr(chunk, "text", "") or ""
                 if chunk_text:
                     accumulated_text += chunk_text
-                    parsed = _parse_response(accumulated_text)
-                    if parsed.get("code"):
-                        last_parsed = parsed
-                        yield json.dumps(parsed, ensure_ascii=False)
 
-            if last_parsed is None:
-                yield json.dumps(_parse_response(accumulated_text), ensure_ascii=False)
+            final_parsed = _parse_response(accumulated_text)
+            yield json.dumps(final_parsed, ensure_ascii=False)
 
         except Exception as e:
             # Yield error as JSON

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ type ResultState = {
   prompt: string;
 };
 
-export default function AIWorkspacePage() {
+function AIWorkspaceContent() {
   const searchParams = useSearchParams();
   const requestId = searchParams.get("requestId");
   const [request, setRequest] = useState<RequestState | null>(null);
@@ -366,5 +366,13 @@ export default function AIWorkspacePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AIWorkspacePage() {
+  return (
+    <Suspense fallback={<div className="p-10">Dang tai...</div>}>
+      <AIWorkspaceContent />
+    </Suspense>
   );
 }

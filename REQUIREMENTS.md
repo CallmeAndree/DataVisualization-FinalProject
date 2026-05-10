@@ -588,80 +588,207 @@ Sports:     '#84cc16'   /* lime */
 ## 6. Project Structure
 
 ```
-vn-youtube-dashboard/
-├── REQUIREMENTS.md         ← File này
-├── INIT.md                 ← Init tasks cho Claude Code
+DataVisualization-FinalProject/
+├── REQUIREMENTS.md         ← File này — source of truth
+├── CLAUDE.md               ← Hướng dẫn cho Claude Code
+├── INIT.md                 ← Init tasks & scaffolding
+├── README.md               ← Quick start guide
+├── DESIGN.md               ← Design system + color palette details
+├── PALLETE.md              ← Color palette reference
+├── PLAN.md                 ← Implementation plan
+├── VERIFICATION.md         ← Verification checklist
+├── Makefile                ← Make commands
+├── lint-output.txt         ← Linting results
 ├── .gitignore
 ├── .env.example
-├── README.md
+│
+├── docs/
+│   ├── api-spec.md         ← Detailed API specification
+│   ├── architecture.md     ← System architecture + data flow
+│   └── design-system.md    ← UI/UX design system
 │
 ├── backend/
-│   ├── pyproject.toml      ← uv project
+│   ├── .python-version     ← Python version (3.11+)
+│   ├── pyproject.toml      ← uv project config
+│   ├── requirements.txt    ← Python dependencies
+│   ├── uv.lock             ← Locked dependencies
+│   ├── verify_backend.ps1  ← Backend verification script
 │   ├── app/
-│   │   ├── main.py         ← FastAPI app, CORS, lifespan
-│   │   ├── config.py       ← Settings từ env
+│   │   ├── __init__.py
+│   │   ├── main.py         ← FastAPI app, CORS, lifespan, health check
+│   │   ├── config.py       ← Pydantic settings từ .env
 │   │   ├── api/
-│   │   │   ├── ai.py       ← POST /api/ai/generate
-│   │   │   ├── execute.py  ← POST /api/execute
+│   │   │   ├── __init__.py
+│   │   │   ├── ai.py       ← POST /api/ai/generate (LLM interface)
+│   │   │   ├── ai_stream.py ← Streaming AI responses
+│   │   │   ├── execute.py  ← POST /api/execute (sandbox runner)
+│   │   │   ├── data.py     ← GET /api/data/schema, /api/data/preview
 │   │   │   ├── logs.py     ← GET /api/logs, /api/logs/{id}
-│   │   │   └── data.py     ← GET /api/data/schema, /api/data/preview
+│   │   │   ├── gallery.py  ← GET /api/gallery (saved analyses)
+│   │   │   └── insights.py ← GET /api/insights (pre-computed insights)
 │   │   ├── services/
+│   │   │   ├── __init__.py
 │   │   │   ├── llm/
-│   │   │   │   ├── base.py         ← Abstract LLMClient
-│   │   │   │   ├── gemini.py       ← Gemini implementation
-│   │   │   │   └── prompts.py      ← System prompt template
-│   │   │   ├── executor.py         ← Sandbox runner
-│   │   │   └── db.py               ← SQLite init + helpers
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base.py         ← Abstract LLMClient interface
+│   │   │   │   ├── gemini.py       ← Google Gemini 2.0 Flash implementation
+│   │   │   │   └── prompts.py      ← System prompts + schema injection
+│   │   │   ├── executor.py         ← Async subprocess sandbox runner (timeout 30s)
+│   │   │   ├── logger.py           ← SQLite wrapper (aiosqlite)
+│   │   │   ├── data_store.py       ← CSV data loading + caching
+│   │   │   ├── gallery.py          ← Saved analysis persistence
+│   │   │   └── insight_service.py  ← Pre-computed insights engine
+│   │   ├── db/
+│   │   │   └── schema.sql  ← SQLite schema: analysis_requests table
 │   │   └── models/
-│   │       ├── request.py          ← Pydantic input schemas
-│   │       └── response.py         ← Pydantic output schemas
+│   │       ├── __init__.py
+│   │       ├── request.py  ← Pydantic schemas for API requests
+│   │       └── response.py ← Pydantic schemas for API responses
 │   ├── data/
-│   │   ├── videos_processed.csv    ← Dataset chính
-│   │   └── channels_processed.csv  ← Dataset kênh
-│   ├── sandbox/                    ← Thư mục chạy code
-│   └── logs.db                     ← SQLite (auto-created)
+│   │   ├── .gitkeep        ← Placeholder (CSVs in .gitignore)
+│   │   ├── videos_processed.csv    ← 30,778 videos (gitignored, local only)
+│   │   └── channels_processed.csv  ← 56 channels (gitignored, local only)
+│   ├── sandbox/            ← Execution sandbox for generated code
+│   │   └── .gitkeep
+│   └── logs.db             ← SQLite database (auto-created on startup)
 │
-├── frontend/
-│   ├── package.json
-│   ├── next.config.ts
-│   ├── tailwind.config.ts
-│   ├── app/
-│   │   ├── layout.tsx              ← Root layout + sidebar
-│   │   ├── page.tsx                ← / Tổng Quan
-│   │   ├── short-form/page.tsx     ← /short-form (RO1)
-│   │   ├── channels/page.tsx       ← /channels (RO2)
-│   │   ├── anomaly/page.tsx        ← /anomaly (RO3)
-│   │   ├── interaction/page.tsx    ← /interaction (RO4)
-│   │   ├── economy/page.tsx        ← /economy (RO5)
-│   │   ├── ai/page.tsx             ← /ai AI workspace
-│   │   └── logs/page.tsx           ← /logs
-│   ├── components/
-│   │   ├── ui/                     ← shadcn components
-│   │   ├── layout/
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── TopBar.tsx
-│   │   ├── charts/
-│   │   │   ├── BarChart.tsx        ← Recharts wrapper
-│   │   │   ├── LineChart.tsx
-│   │   │   ├── ScatterChart.tsx    ← Plotly wrapper
-│   │   │   ├── HeatmapChart.tsx    ← Plotly wrapper
-│   │   │   ├── BoxPlot.tsx         ← Plotly wrapper
-│   │   │   └── PieChart.tsx
-│   │   ├── dashboard/
-│   │   │   ├── KPICard.tsx
-│   │   │   ├── InsightCard.tsx     ← 💡 Storytelling card
-│   │   │   └── FilterBar.tsx
-│   │   └── ai/
-│   │       ├── ChatInput.tsx
-│   │       ├── CodeBlock.tsx       ← Monaco + status + actions
-│   │       ├── StatusBadge.tsx     ← pending/approved/completed
-│   │       ├── ResultPanel.tsx     ← figures + tables + stdout
-│   │       └── RequestCard.tsx     ← Card trong logs list
-│   └── lib/
-│       ├── api.ts                  ← Fetch wrapper
-│       ├── constants.ts            ← CATEGORY_COLORS, etc.
-│       └── utils.ts                ← Format numbers, dates
+└── frontend/
+    ├── AGENTS.md           ← Next.js-specific agent guidance
+    ├── CLAUDE.md           ← Frontend-specific Claude instructions
+    ├── README.md           ← Frontend setup & run instructions
+    ├── VERIFICATION_CHECKLIST.md ← Frontend verification tasks
+    ├── package.json        ← Dependencies (Next.js 16, React 19, etc.)
+    ├── pnpm-lock.yaml      ← Locked dependencies
+    ├── pnpm-workspace.yaml ← pnpm workspace config
+    ├── next.config.ts      ← Next.js configuration
+    ├── tsconfig.json       ← TypeScript config
+    ├── tailwind.config.ts  ← Tailwind CSS with design tokens
+    ├── postcss.config.mjs  ← PostCSS config
+    ├── eslint.config.mjs   ← ESLint configuration
+    ├── components.json     ← shadcn component registry
+    ├── .gitignore
+    ├── app/
+    │   ├── layout.tsx              ← Root layout + Sidebar navigation
+    │   ├── page.tsx                ← / Tổng Quan (Overview) — RO summary
+    │   ├── CategoryFilterContext.tsx ← Global filter state
+    │   ├── MultiDimensionalFilterContext.tsx ← Advanced multi-filter state
+    │   ├── globals.css             ← Global styles
+    │   ├── favicon.ico
+    │   ├── short-form/
+    │   │   └── page.tsx            ← /short-form (RO1: short-form vs long-form)
+    │   ├── channels/
+    │   │   └── page.tsx            ← /channels (RO2: channel growth & category)
+    │   ├── anomaly/
+    │   │   └── page.tsx            ← /anomaly (RO3: viral & suspicious views)
+    │   ├── interaction/
+    │   │   └── page.tsx            ← /interaction (RO4: engagement paradox)
+    │   ├── economy/
+    │   │   └── page.tsx            ← /economy (RO5: YouTube Shopping impact)
+    │   ├── ai/
+    │   │   └── page.tsx            ← /ai AI Workspace (chat + code editor)
+    │   ├── gallery/
+    │   │   └── page.tsx            ← /gallery Saved analyses
+    │   └── audit/
+    │       ├── page.tsx            ← /audit Request history + logs
+    │       └── [id]/
+    │           └── page.tsx        ← /audit/{id} Detailed request view
+    ├── components/
+    │   ├── ui/                     ← shadcn primitives (button, card, dialog, etc.)
+    │   │   ├── badge.tsx
+    │   │   ├── button.tsx
+    │   │   ├── card.tsx
+    │   │   ├── dialog.tsx
+    │   │   ├── dropdown-menu.tsx
+    │   │   ├── input.tsx
+    │   │   ├── scroll-area.tsx
+    │   │   ├── select.tsx
+    │   │   ├── separator.tsx
+    │   │   ├── slider.tsx
+    │   │   ├── switch.tsx
+    │   │   ├── table.tsx
+    │   │   ├── tabs.tsx
+    │   │   ├── textarea.tsx
+    │   │   └── toggle.tsx
+    │   ├── dashboard/
+    │   │   ├── Sidebar.tsx         ← Navigation menu + route links
+    │   │   ├── FilterBar.tsx       ← Shared filter UI (dropdowns, sliders)
+    │   │   ├── FilterBadges.tsx    ← Active filter display + clear buttons
+    │   │   ├── KPICard.tsx         ← KPI metric display (4 cards on Overview)
+    │   │   └── InsightCard.tsx     ← 💡 Storytelling card (1 per page)
+    │   ├── charts/
+    │   │   ├── ChartCard.tsx       ← Wrapper card for charts
+    │   │   ├── BarChart.tsx        ← Recharts bar chart wrapper
+    │   │   ├── LineChart.tsx       ← Recharts line chart wrapper
+    │   │   ├── StackedAreaChart.tsx ← Recharts stacked area (A3 on Overview)
+    │   │   ├── StackedBarChart.tsx ← Recharts stacked bar
+    │   │   ├── PieDonut.tsx        ← Recharts pie/donut chart (A1 on Overview)
+    │   │   ├── ScatterPlotly.tsx   ← Plotly scatter (C2: subscribers vs views)
+    │   │   ├── BoxPlotly.tsx       ← Plotly box plot (C1, E1)
+    │   │   ├── HeatmapPlotly.tsx   ← Plotly heatmap (B1, E2)
+    │   │   ├── DualAxisBarLinePlotly.tsx ← Dual-axis chart
+    │   │   └── TopVideosTable.tsx  ← Horizontal table for top videos
+    │   └── ai/
+    │       ├── ChatInput.tsx       ← Prompt input + send button
+    │       ├── CodeBlock.tsx       ← Monaco editor (editable code display)
+    │       ├── GenerationProgress.tsx ← Streaming progress indicator
+    │       ├── StatusBadge.tsx     ← Status pill (pending/approved/executing/completed/failed)
+    │       ├── ResultPanel.tsx     ← Results display (figures + tables + stdout)
+    │       └── SkeletonLoader.tsx  ← Loading skeleton
+    ├── lib/
+    │   ├── api.ts                  ← Typed fetch wrapper for /api/*
+    │   ├── constants.ts            ← CATEGORY_COLORS, DURATION_GROUPS, etc.
+    │   ├── design-tokens.ts        ← Tailwind design token values
+    │   ├── utils.ts                ← formatNumber, formatDate, etc.
+    │   ├── hooks/
+    │   │   ├── useChartFilter.ts   ← Hook for filter state + debounce
+    │   │   ├── useStreamingResponse.ts ← Hook for streaming AI responses
+    │   │   └── __tests__/
+    │   │       └── useChartFilter.test.ts
+    │   └── utils/
+    │       ├── filterUtils.ts      ← Helper: apply filters to data
+    │       ├── kpiUtils.ts         ← Helper: calculate KPI metrics
+    │       └── __tests__/
+    │           └── filterUtils.test.ts
+    └── public/
+        ├── favicon.ico
+        ├── file.svg
+        ├── globe.svg
+        ├── next.svg
+        ├── vercel.svg
+        └── window.svg
 ```
+
+### 6.1 Notes on Project Structure
+
+**Backend (Python + FastAPI):**
+- Environment: `conda` env `vn-dataviz-ai`; Python 3.11+
+- Package manager: `uv` (faster than pip)
+- Database: SQLite3 (auto-created in `logs.db` on startup via lifespan hook)
+- Data files: CSV placed in `backend/data/` (gitignored per `.gitignore`)
+- Sandbox: `backend/sandbox/` — isolated execution for generated code (timeout 30s)
+- API design: 4 routers (`ai`, `execute`, `logs`, `data`) + 2 bonus (`gallery`, `insights`)
+
+**Frontend (Next.js 16 + React 19 + TypeScript):**
+- Framework: Next.js 16 with App Router (not Pages Router)
+- Styling: Tailwind CSS 4 + shadcn/ui component library
+- Package manager: `pnpm`
+- Charts: Recharts (simple) + Plotly.js (interactive: heatmap, box plot, scatter)
+- Code editor: Monaco Editor for AI-generated code review
+- Type safety: Full TypeScript 5+
+- Components split: UI primitives (shadcn) → dashboard (KPI/Insight/Filter) → charts (domain-specific)
+
+**Routes Summary (8 total):**
+| Path | Purpose | Component |
+|---|---|---|
+| `/` | Dashboard overview (3 charts + 4 KPI) | Overview all RO trends |
+| `/short-form` | RO1 analysis | Short-form adoption trend |
+| `/channels` | RO2 analysis | Channel growth & category |
+| `/anomaly` | RO3 analysis | Viral videos & fake views |
+| `/interaction` | RO4 analysis | Engagement paradox |
+| `/economy` | RO5 analysis | YouTube Shopping impact |
+| `/ai` | AI workspace | Chat + code editor + results |
+| `/gallery` | Saved analyses | Persisted insights |
+| `/audit` | Request logs | History + `/audit/{id}` detail view |
 
 ---
 

@@ -21,6 +21,7 @@ import {
   VideotapeIcon,
   FileVideoCamera,
   FilmIcon,
+  CircleArrowOutUpRightIcon,
 } from "lucide-react";
 
 const items = [
@@ -28,8 +29,8 @@ const items = [
   { href: "/short-form",  label: "Xu hướng video ngắn",    icon: FilmIcon },
   { href: "/channels",    label: "Định dạng & tương tác",   icon: Users },
   { href: "/interaction", label: "Giờ vàng đăng video",     icon: Clock1 },
-  { href: "/anomaly",     label: "Giải phẫu viral",         icon: TrendingUpIcon },
-  { href: "/economy",     label: "Quy mô & chiến lược",     icon: ShoppingCart },
+  { href: "/anomaly",     label: "Bóc tách video viral",         icon: TrendingUpIcon },
+  { href: "/economy",     label: "Quy mô & chiến lược",     icon: CircleArrowOutUpRightIcon },
   { href: "/ai",          label: "Không gian AI",          icon: Sparkles },
   { href: "/gallery",     label: "Bộ sưu tập",             icon: Images },
   { href: "/audit",       label: "Nhật ký kiểm duyệt",     icon: ScrollText },

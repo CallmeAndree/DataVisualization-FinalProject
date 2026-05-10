@@ -1,6 +1,6 @@
 "use client";
 /**
- * Anomaly Page — RO4: Giải Phẫu Video Viral.
+ * Anomaly Page — RO4: Bóc Tách Video Viral.
  */
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { api, type AnomalyData } from "@/lib/api";
@@ -104,7 +104,7 @@ function AnomalyContent() {
       <div className="min-h-0 flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
           <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO4</p>
-          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Giải Phẫu Video Viral</h1>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Bóc Tách Video Viral</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
             Phân tích danh mục nào tạo nhiều video viral nhất và mức lan truyền tiếp nối sau mỗi sự kiện viral. Click để lọc.
           </p>

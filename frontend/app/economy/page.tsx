@@ -117,7 +117,7 @@ function EconomyContent() {
       <div className="min-h-0 flex-1 overflow-y-auto px-10 py-8">
         <header className="mb-8">
           <p className={`text-xs uppercase tracking-[0.2em] ${TEXT_COLORS.muted}`}>RO5</p>
-          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Quy Mô Kênh vs. Chiến Lược</h1>
+          <h1 className={`mt-2 text-4xl font-semibold tracking-tight ${TEXT_COLORS.ink}`}>Quy Mô Kênh & Chiến Lược</h1>
           <p className={`mt-3 max-w-2xl ${TEXT_COLORS.slate}`}>
             Đánh giá mối quan hệ giữa quy mô người đăng ký, tương tác trung bình và chiến lược đăng tải của từng kênh YouTube. Click để lọc.
           </p>

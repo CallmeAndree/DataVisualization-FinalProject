@@ -28,14 +28,16 @@ interface StackedBarChartProps {
   bars: BarConfig[];
   onSegmentClick?: (xValue: string | number, segmentKey: string, value: number) => void;
   selectedSegment?: { x: string | number; key: string };
+  grouped?: boolean;
+  height?: number;
 }
 
-export function StackedBarChart({ data, xKey, bars, onSegmentClick, selectedSegment }: StackedBarChartProps) {
+export function StackedBarChart({ data, xKey, bars, onSegmentClick, selectedSegment, grouped = false, height = 280 }: StackedBarChartProps) {
   const isSelected = (entry: Record<string, unknown>, key: string) =>
     selectedSegment ? entry[xKey] === selectedSegment.x && key === selectedSegment.key : false;
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
         <CartesianGrid stroke={CHART_CHROME.grid} strokeDasharray="3 3" vertical={false} />
         <XAxis
@@ -43,6 +45,8 @@ export function StackedBarChart({ data, xKey, bars, onSegmentClick, selectedSegm
           tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
+          interval={0}
+          allowDuplicatedCategory={false}
         />
         <YAxis
           tickFormatter={formatNumber}
@@ -73,7 +77,7 @@ export function StackedBarChart({ data, xKey, bars, onSegmentClick, selectedSegm
             key={b.key}
             dataKey={b.key}
             name={b.label ?? b.key}
-            stackId="stack"
+            stackId={grouped ? undefined : "stack"}
             fill={chartColor(b.color, chartPaletteColor(index))}
             radius={[2, 2, 0, 0]}
           >

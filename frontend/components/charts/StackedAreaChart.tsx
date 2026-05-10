@@ -66,6 +66,8 @@ export function StackedAreaChart({
           tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
+          interval={0}
+          allowDuplicatedCategory={false}
         />
         <YAxis
           tickFormatter={pct ? (v) => `${Math.round(v * 100)}%` : undefined}

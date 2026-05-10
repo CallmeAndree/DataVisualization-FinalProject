@@ -161,26 +161,26 @@ export function MultiDimensionalFilterProvider({ children }: { children: React.R
       const newFilters: FilterState = { ...filters };
 
       if (dimension === "category") {
-        newFilters.category = filters.category === value ? null : (value as string | null);
+        newFilters.category = value as string | null;
       } else if (dimension === "year") {
-        newFilters.year = filters.year === value ? null : (value as number | null);
+        newFilters.year = value as number | null;
       } else if (dimension === "viewRange") {
         newFilters.viewRange = value as RangeFilter | null;
       } else if (dimension === "videoRange") {
         newFilters.videoRange = value as RangeFilter | null;
       } else if (dimension === "duration") {
-        newFilters.duration = filters.duration === value ? null : (value as DurationFilter | null);
+        newFilters.duration = value as DurationFilter | null;
       } else if (dimension === "hour") {
-        newFilters.hour = filters.hour === value ? null : (value as number | null);
+        newFilters.hour = value as number | null;
       } else if (dimension === "day_of_week") {
-        newFilters.day_of_week = filters.day_of_week === value ? null : (value as number | null);
+        newFilters.day_of_week = value as number | null;
       } else if (dimension === "channel") {
-        newFilters.channel = filters.channel === value ? null : (value as string | null);
+        newFilters.channel = value as string | null;
       } else if (dimension === "subscriber_range") {
         const nextRange = value as RangeFilter | null;
         newFilters.subscriber_range = rangesEqual(filters.subscriber_range, nextRange) ? null : nextRange;
       } else if (dimension === "viral_threshold") {
-        newFilters.viral_threshold = filters.viral_threshold === value ? null : (value as number | null);
+        newFilters.viral_threshold = value as number | null;
       }
 
       const queryString = serializeFilters(newFilters).toString();

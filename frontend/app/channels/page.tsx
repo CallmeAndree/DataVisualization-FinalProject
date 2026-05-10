@@ -139,7 +139,7 @@ function ChannelsContent() {
         {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data || !filteredHeatmap ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
-              <ChartCard title="B1: Phân bố độ dài video theo danh mục" description="Click để lọc theo danh mục + thời lượng">
+              <ChartCard title="C1: Phân bố thời lượng video theo danh mục" description="Click để lọc theo danh mục và thời lượng">
                 <BarChart
                   data={filteredDistribution.map((row) => ({ ...row, category: labelCategory(row.category) }))}
                   xKey="category"
@@ -157,7 +157,7 @@ function ChannelsContent() {
                 />
               </ChartCard>
 
-              <ChartCard title="B2: Tương tác trung vị theo độ dài video" description="Click để lọc theo danh mục + thời lượng">
+              <ChartCard title="C2: Tương tác trung vị theo thời lượng video" description="Click để lọc theo danh mục và thời lượng">
                 <HeatmapPlotly
                   z={filteredHeatmap.z}
                   x={filteredHeatmap.durations.map(labelDuration)}

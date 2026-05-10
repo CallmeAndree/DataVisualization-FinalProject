@@ -46,12 +46,42 @@ function OverviewContent() {
 
   const filteredA2Data = useMemo(() => {
     if (!rawData?.a2_views_by_year) return [];
-    return applyFilters(rawData.a2_views_by_year, filters);
+
+    const rows = applyFilters(rawData.a2_views_by_year, filters);
+    const yearlyTotals = new Map<number, number>();
+
+    rows.forEach((row) => {
+      yearlyTotals.set(row.year, (yearlyTotals.get(row.year) ?? 0) + row.total_views);
+    });
+
+    return Array.from(yearlyTotals.entries())
+      .sort(([leftYear], [rightYear]) => leftYear - rightYear)
+      .map(([year, total_views]) => ({ year, total_views }));
   }, [rawData, filters]);
 
   const filteredA3Data = useMemo(() => {
     if (!rawData?.a3_short_long_ratio) return [];
-    return applyFilters(rawData.a3_short_long_ratio, filters);
+
+    const rows = applyFilters(rawData.a3_short_long_ratio, filters);
+    const yearlyTotals = new Map<number, { short: number; long: number }>();
+
+    rows.forEach((row) => {
+      const current = yearlyTotals.get(row.year) ?? { short: 0, long: 0 };
+      current.short += row.short_count;
+      current.long += row.long_count;
+      yearlyTotals.set(row.year, current);
+    });
+
+    return Array.from(yearlyTotals.entries())
+      .sort(([leftYear], [rightYear]) => leftYear - rightYear)
+      .map(([year, totals]) => {
+        const total = totals.short + totals.long;
+        return {
+          year,
+          short: total > 0 ? totals.short / total : 0,
+          long: total > 0 ? totals.long / total : 0,
+        };
+      });
   }, [rawData, filters]);
 
   const kpis = useMemo(() => {
@@ -182,11 +212,7 @@ function OverviewContent() {
           description={filters.category ? `Lọc: ${labelCategory(filters.category)}` : "Tất cả danh mục"}
         >
           <StackedAreaChart
-            data={(filteredA3Data ?? []).map((d) => ({
-              year: d.year,
-              short: d.short_ratio,
-              long: 1 - d.short_ratio,
-            }))}
+            data={filteredA3Data}
             xKey="year"
             areas={[
               { key: "short", label: "Video ngắn", color: DURATION_COLORS.Short, stackId: "ratio" },

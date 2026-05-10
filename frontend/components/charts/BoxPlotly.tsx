@@ -65,7 +65,7 @@ export function BoxPlotly({
         paper_bgcolor: CHART_CHROME.paper,
         plot_bgcolor: CHART_CHROME.plot,
         height,
-        margin: { t: 8, r: 8, b: 60, l: 60 },
+        margin: { t: 8, r: baseline != null ? 128 : 8, b: 60, l: 60 },
         font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         showlegend: false,
         hovermode: "closest",
@@ -94,13 +94,16 @@ export function BoxPlotly({
         }] : undefined,
         annotations: baseline != null ? [{
           xref: "paper",
-          x: 1,
+          yref: "y",
+          x: 1.03,
           y: baseline,
-          xanchor: "right",
-          yanchor: "bottom",
+          xanchor: "left",
+          yanchor: "middle",
+          align: "left",
           text: baselineLabel,
           showarrow: false,
           font: { size: 11, color: REFERENCE_COLORS.viral },
+          bgcolor: CHART_CHROME.paper,
         }] : undefined,
       }}
       config={{ responsive: true, displayModeBar: false }}

@@ -115,7 +115,7 @@ function AnomalyContent() {
         {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
-              <ChartCard title="B1: Số lượng và tỷ lệ video viral theo danh mục" description="Click cột để lọc theo danh mục">
+              <ChartCard title="D1: Số lượng và tỷ lệ video viral theo danh mục" description="Click cột để lọc theo danh mục">
                 <DualAxisBarLinePlotly
                   x={data.d1_viral_by_category.map((row) => labelCategory(row.category))}
                   barY={data.d1_viral_by_category.map((row) => row.viral_count)}
@@ -131,23 +131,23 @@ function AnomalyContent() {
                 />
               </ChartCard>
 
-              <ChartCard title="B2: Viral momentum theo kênh" description="Click điểm để xem chi tiết trong console">
+              <ChartCard title="D2: Động lượng viral theo kênh" description="Click điểm để xem chi tiết kênh trong console">
                 <BoxPlotly
                   traces={momentumCategories.map((cat) => {
                     const points = data.d2_viral_momentum.points.filter((point) => point.category === cat);
                     return {
                       name: labelCategory(cat),
                       y: points.map((point) => point.momentum_rate),
-                      text: points.map((point) => `${point.channel_name} (${point.n_viral_events} viral events)`),
+                      text: points.map((point) => `${point.channel_name} (${point.n_viral_events} lần viral)`),
                       color: CATEGORY_COLORS[cat],
                     };
                   })}
-                  yLabel="Viral momentum rate"
+                  yLabel="Tỷ lệ động lượng viral"
                   height={340}
                   showPoints
                   percent
                   baseline={data.d2_viral_momentum.baseline_all}
-                  baselineLabel="Viral baseline toàn bộ dataset"
+                  baselineLabel="Đường chuẩn viral của toàn bộ tập dữ liệu"
                   onOutlierClick={(point) => console.info("Viral momentum point", point)}
                 />
               </ChartCard>

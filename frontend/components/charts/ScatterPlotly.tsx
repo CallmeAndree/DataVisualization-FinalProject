@@ -42,6 +42,7 @@ interface ScatterPlotlyProps {
   quadrantLabels?: string[];
   onPointClick?: (point: ScatterPointClickData) => void;
   selectedPoint?: { name: string };
+  isolatedSelection?: boolean;
 }
 
 export function ScatterPlotly({
@@ -58,6 +59,7 @@ export function ScatterPlotly({
   quadrantLabels,
   onPointClick,
   selectedPoint,
+  isolatedSelection = false,
 }: ScatterPlotlyProps) {
   return (
     <Plot
@@ -68,7 +70,8 @@ export function ScatterPlotly({
         );
         const opacities = t.x.map((_, pointIndex) => {
           const pointName = t.text?.[pointIndex] ?? t.name;
-          return selectedPoint ? (pointName === selectedPoint.name ? 1 : 0.35) : t.marker?.opacity ?? 0.75;
+          if (!selectedPoint) return t.marker?.opacity ?? 0.75;
+          return pointName === selectedPoint.name ? 1 : (isolatedSelection ? 0 : 0.35);
         });
         const lineWidths = t.x.map((_, pointIndex) => {
           const pointName = t.text?.[pointIndex] ?? t.name;

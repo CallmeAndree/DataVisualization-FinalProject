@@ -71,6 +71,8 @@ export function LineChart({
           tick={{ fontSize: 12, fill: CHART_CHROME.axis }}
           axisLine={false}
           tickLine={false}
+          interval={0}
+          allowDuplicatedCategory={false}
         />
         <YAxis
           tickFormatter={yFormatter}

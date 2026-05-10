@@ -35,16 +35,19 @@ export function HeatmapPlotly({
   onCellClick,
   selectedCell,
 }: HeatmapPlotlyProps) {
-  const shapes = selectedCell
+  const selectedXIndex = selectedCell ? x.findIndex((value) => String(value) === String(selectedCell.x)) : -1;
+  const selectedYIndex = selectedCell ? y.findIndex((value) => String(value) === String(selectedCell.y)) : -1;
+
+  const shapes = selectedXIndex >= 0 && selectedYIndex >= 0
     ? [
         {
           type: "rect" as const,
           xref: "x" as const,
           yref: "y" as const,
-          x0: selectedCell.x,
-          x1: selectedCell.x,
-          y0: selectedCell.y,
-          y1: selectedCell.y,
+          x0: selectedXIndex - 0.5,
+          x1: selectedXIndex + 0.5,
+          y0: selectedYIndex - 0.5,
+          y1: selectedYIndex + 0.5,
           line: { color: CHART_CHROME.emphasis, width: 3 },
           fillcolor: "rgba(0,0,0,0)",
         },
@@ -69,7 +72,7 @@ export function HeatmapPlotly({
         paper_bgcolor: CHART_CHROME.paper,
         plot_bgcolor: CHART_CHROME.plot,
         height,
-        margin: { t: 8, r: 8, b: 60, l: 100 },
+        margin: { t: 8, r: 8, b: 60, l: 120 },
         font: { family: "Inter, Arial, sans-serif", size: 12, color: CHART_CHROME.tooltipText },
         hovermode: "closest",
         dragmode: false,
@@ -80,7 +83,7 @@ export function HeatmapPlotly({
           tickfont: { size: 11, color: CHART_CHROME.axis },
         },
         yaxis: {
-          title: yLabel ? { text: yLabel } : undefined,
+          title: yLabel ? { text: yLabel, standoff: 22 } : undefined,
           showgrid: false,
           tickfont: { size: 11, color: CHART_CHROME.axis },
           automargin: true,

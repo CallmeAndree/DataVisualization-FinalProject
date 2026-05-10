@@ -47,6 +47,7 @@ function EconomyContent() {
   };
 
   const toggleCategory = (cat: string) => {
+    updateFilter("channel", null);
     updateFilter("category", cat);
     resetInsight();
   };
@@ -127,7 +128,7 @@ function EconomyContent() {
         {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
-              <ChartCard title="B1: Subscriber count vs. engagement rate" description="Click điểm để lọc theo kênh + danh mục">
+              <ChartCard title="F1: Quy mô người đăng ký và tỷ lệ tương tác" description="Click điểm để lọc kênh và danh mục">
                 <ScatterPlotly
                   traces={categories.map((cat) => {
                     const points = filteredScatter
@@ -144,18 +145,19 @@ function EconomyContent() {
                   })}
                   xAxisType="log"
                   percentY
-                  xLabel="Số người đăng ký (log)"
-                  yLabel="Average engagement rate"
+                  xLabel="Số người đăng ký (thang log)"
+                  yLabel="Tỷ lệ tương tác trung bình"
                   height={360}
                   onPointClick={(point) => {
                     updateFilter("channel", point.name);
                     if (point.category) updateFilter("category", point.category);
                   }}
                   selectedPoint={filters.channel ? { name: filters.channel } : undefined}
+                  isolatedSelection
                 />
               </ChartCard>
 
-              <ChartCard title="B2: Posting strategy quadrant" description="Click điểm để lọc theo kênh + danh mục">
+              <ChartCard title="F2: Ma trận chiến lược đăng tải" description="Click điểm để lọc kênh và danh mục">
                 <ScatterPlotly
                   traces={categories.map((cat) => {
                     const points = filteredQuadrant
@@ -171,8 +173,8 @@ function EconomyContent() {
                     };
                   })}
                   yAxisType="log"
-                  xLabel="Video count trong dataset"
-                  yLabel="Average views/video (log)"
+                  xLabel="Số video trong tập dữ liệu"
+                  yLabel="Lượt xem trung bình mỗi video (thang log)"
                   height={360}
                   referenceX={data.f2_strategy_quadrant.median_x}
                   referenceY={data.f2_strategy_quadrant.median_y}
@@ -182,6 +184,7 @@ function EconomyContent() {
                     if (point.category) updateFilter("category", point.category);
                   }}
                   selectedPoint={filters.channel ? { name: filters.channel } : undefined}
+                  isolatedSelection
                 />
               </ChartCard>
             </div>

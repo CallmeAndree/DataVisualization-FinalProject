@@ -80,7 +80,7 @@ function ShortFormContent() {
 
     return {
       years: years.map(({ year }) => year),
-      channels: channels.map(({ channel }) => channel),
+      channels: channels.map(({ channel }) => labelCategory(channel)),
       z: channels.map(({ index: channelIndex }) =>
         years.map(({ index: yearIndex }) => data.b1_heatmap.z[channelIndex]?.[yearIndex] ?? 0)
       ),
@@ -213,7 +213,7 @@ function ShortFormContent() {
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
               <ChartCard
-                title="B1: Tỉ lệ video ngắn theo kênh × năm"
+                title="B1: Tỷ lệ video ngắn theo kênh và năm"
                 description="Click để lọc theo kênh + năm"
               >
                 <HeatmapPlotly
@@ -223,13 +223,14 @@ function ShortFormContent() {
                   colorscale={SHORT_FORM_HEATMAP_COLORSCALE}
                   reversescale={false}
                   xLabel="Năm"
-                  yLabel="Kênh"
+                  yLabel="Danh mục"
                   height={480}
                   onCellClick={(x, y) => {
                     updateFilter("year", Number(x));
-                    updateFilter("channel", String(y));
+                    const originalChannel = data.b1_heatmap.channels.find((channel) => labelCategory(channel) === String(y)) ?? String(y);
+                    updateFilter("channel", originalChannel);
                   }}
-                  selectedCell={filters.year && filters.channel ? { x: String(filters.year), y: filters.channel } : undefined}
+                  selectedCell={filters.year !== null && filters.channel ? { x: String(filters.year), y: labelCategory(filters.channel) } : undefined}
                 />
               </ChartCard>
 
@@ -240,6 +241,8 @@ function ShortFormContent() {
                 <StackedBarChart
                   data={filteredBar}
                   xKey="label"
+                  grouped
+                  height={500}
                   bars={[
                     { key: "short", label: "Video ngắn", color: DURATION_COLORS.Short },
                     { key: "long", label: "Video dài", color: DURATION_COLORS.Long },
@@ -248,7 +251,7 @@ function ShortFormContent() {
                     updateFilter("year", parseInt(String(xValue), 10));
                     updateFilter("duration", durationFromSegment(segmentKey));
                   }}
-                  selectedSegment={filters.year && filters.duration ? { x: String(filters.year), key: filters.duration === "Short" ? "short" : "long" } : undefined}
+                  selectedSegment={filters.year !== null && filters.duration ? { x: String(filters.year), key: filters.duration === "Short" ? "short" : "long" } : undefined}
                 />
               </ChartCard>
             </div>

@@ -26,7 +26,7 @@ next-env.d.ts
 .env.*.local
 
 # ===== Data (giữ sample, ignore phần còn lại) =====
-backend/data/*
+#backend/data/*
 !backend/data/sample.csv
 !backend/data/.gitkeep
 

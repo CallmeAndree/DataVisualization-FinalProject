@@ -127,7 +127,7 @@ function GalleryContent() {
         <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">
           Gallery
         </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#4D1C2D]">
           Chart đã lưu
         </h1>
         <p className="mt-3 max-w-2xl text-[#75758a]">
@@ -174,7 +174,7 @@ function GalleryContent() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#212121]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#4D1C2D]" />
         </div>
       ) : error ? (
         <p className="text-sm text-[#b30000]">{error}</p>
@@ -247,7 +247,7 @@ function GalleryContent() {
                 </div>
               </div>
               <CardContent className="space-y-2 pt-4">
-                <h3 className="line-clamp-2 font-semibold text-[#212121]">
+                <h3 className="line-clamp-2 font-semibold text-[#4D1C2D]">
                   {chart.title}
                 </h3>
                 <p className="text-xs text-[#93939f]">
@@ -335,7 +335,7 @@ function GalleryContent() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
                     Prompt
                   </p>
-                  <p className="mt-1 text-sm text-[#212121]">
+                  <p className="mt-1 text-sm text-[#4D1C2D]">
                     {viewTarget.prompt}
                   </p>
                 </div>
@@ -343,7 +343,7 @@ function GalleryContent() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
                     Phân tích AI
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#212121]">
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#4D1C2D]">
                     {viewTarget.analysis ?? "Chart này được lưu trước khi hệ thống hỗ trợ lưu phân tích AI."}
                   </p>
                 </div>

@@ -44,7 +44,7 @@ export default function LogDetailPage() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#212121]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#4D1C2D]" />
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function LogDetailPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">
               Chi tiết nhật ký
             </p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#4D1C2D]">
               Chi tiết request
             </h1>
           </div>
@@ -104,7 +104,7 @@ export default function LogDetailPage() {
             <CardTitle className="text-lg">Câu hỏi</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-[#212121]">{log.prompt}</p>
+            <p className="text-sm text-[#4D1C2D]">{log.prompt}</p>
           </CardContent>
         </Card>
 
@@ -130,7 +130,7 @@ export default function LogDetailPage() {
                   onClick={() => setActiveTab("ai")}
                   className={`rounded px-3 py-1 text-sm ${
                     activeTab === "ai"
-                      ? "bg-[#212121] text-white"
+                      ? "bg-[#73293A] text-white"
                       : "bg-[#f2f2f2] text-[#75758a]"
                   }`}
                 >
@@ -140,7 +140,7 @@ export default function LogDetailPage() {
                   onClick={() => setActiveTab("edited")}
                   className={`rounded px-3 py-1 text-sm ${
                     activeTab === "edited"
-                      ? "bg-[#212121] text-white"
+                      ? "bg-[#73293A] text-white"
                       : "bg-[#f2f2f2] text-[#75758a]"
                   }`}
                 >
@@ -175,7 +175,7 @@ export default function LogDetailPage() {
         {/* Execution Results */}
         {(log.status === "completed" || log.status === "failed") && (
           <div>
-            <h2 className="mb-4 text-lg font-semibold text-[#212121]">
+            <h2 className="mb-4 text-lg font-semibold text-[#4D1C2D]">
               Kết quả thực thi
             </h2>
             <ResultPanel

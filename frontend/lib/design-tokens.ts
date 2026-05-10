@@ -6,13 +6,13 @@
 // ── Color tokens ─────────────────────────────────────────────────────────────
 export const COLORS = {
   // Primary & backgrounds
-  primary: "#17171c",           // CTA chính, footer, dark UI cards
-  cohereBlack: "#000000",       // Announcement bar, anchor đậm nhất
-  deepGreen: "#003c33",         // Dark feature band cho dashboard
-  darkNavy: "#071829",          // Solution band thay thế
-  ink: "#212121",               // Body text trên nền sáng
+  primary: "#4D1C2D",           // CTA chính, footer, dark UI cards
+  cohereBlack: "#4D1C2D",       // Text đậm thay cho black
+  deepGreen: "#73293A",         // Dark product band cho dashboard
+  darkNavy: "#73293A",          // Secondary dark
+  ink: "#4D1C2D",               // Body text trên nền sáng
   canvas: "#ffffff",            // Page background
-  softStone: "#eeece7",         // Product/testimonial cards
+  softStone: "#FFBB94",         // Warm neutral — filter bar surface
   paleGreen: "#edfce9",         // Section backdrop tươi
   paleBlue: "#f1f5ff",          // CTA backdrop tươi
 
@@ -27,30 +27,30 @@ export const COLORS = {
   bodyMuted: "#616161",         // Body de-emphasized
 
   // Action & interactive
-  actionBlue: "#1863dc",        // Editorial link, pagination
-  focusBlue: "#4c6ee6",         // Focus ring
-  coral: "#ff7759",             // Taxonomy chip (logs filter)
+  actionBlue: "#FF004C",        // Primary action accent
+  focusBlue: "#FF004C",         // Focus ring
+  coral: "#FF004C",             // Taxonomy chip (logs filter)
   coralSoft: "#ffad9b",         // Soft chip border
-  formFocus: "#9b60aa",         // Input focus border
+  formFocus: "#B23E59",         // Input focus border
   error: "#b30000",             // Validation error
 } as const;
 
 // ── Tailwind class helpers ──────────────────────────────────────────────────
 // Map design tokens to Tailwind utility classes for consistency
 export const TEXT_COLORS = {
-  ink: "text-[#212121]",
+  ink: "text-[#4D1C2D]",
   muted: "text-[#93939f]",
   slate: "text-[#75758a]",
   bodyMuted: "text-[#616161]",
-  actionBlue: "text-[#1863dc]",
+  actionBlue: "text-[#FF004C]",
   white: "text-white",
 } as const;
 
 export const BG_COLORS = {
   canvas: "bg-[#ffffff]",
-  primary: "bg-[#17171c]",
-  deepGreen: "bg-[#003c33]",
-  softStone: "bg-[#eeece7]",
+  primary: "bg-[#4D1C2D]",
+  deepGreen: "bg-[#73293A]",
+  softStone: "bg-[#FFBB94]",
   paleGreen: "bg-[#edfce9]",
   paleBlue: "bg-[#f1f5ff]",
   cardBorder: "bg-[#f2f2f2]",
@@ -60,5 +60,5 @@ export const BORDER_COLORS = {
   cardBorder: "border-[#f2f2f2]",
   hairline: "border-[#d9d9dd]",
   borderLight: "border-[#e5e7eb]",
-  actionBlue: "border-[#1863dc]",
+  actionBlue: "border-[#FF004C]",
 } as const;

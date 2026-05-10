@@ -2,8 +2,8 @@
  * frontend/lib/constants.ts
  * Shared constants and formatting helpers — Cohere design system (DESIGN.md).
  *
- * COLOR PALETTE SOURCE: PALLETE.md (enforced as of 2026-05-09)
- * All chart colors use the purple-pink palette from PALLETE.md.
+ * COLOR PALETTE SOURCE: PALLETE.md (enforced as of 2026-05-10)
+ * All chart colors use the warm peachy-pink palette from PALLETE.md.
  * UI chrome (backgrounds, grids, text) uses Cohere design tokens for light mode.
  */
 
@@ -11,33 +11,26 @@
 // Strict chart palettes from PALLETE.md. All dashboard charts and AI-generated
 // charts must use only these values for marks, heatmaps, references, and chart
 // chrome colors.
-// Source: PALLETE.md - Purple-Pink theme for series colors
+// Source: PALLETE.md - Warm peachy-pink theme for series colors
+// Series palette: FFBB94 → FB9590 → DC586D → D44673 → B23E59 → 73293A (light → dark)
 export const PASTEL_COLORS = [
-  "#C77DFF",
-  "#E040FB",
-  "#FF80AB",
-  "#B39DDB",
-  "#FF6FD8",
-  "#D5AAFF",
-  "#F48FB1",
-  "#9FA8DA",
-  "#FF8DC7",
-  "#CE93D8",
+  "#FFBB94",  // Light peachy
+  "#FB9590",  // Light pink-coral
+  "#DC586D",  // Medium rose-pink
+  "#D44673",  // Darker pink
+  "#B3546A",  // Deep burgundy
+  "#73293A",  // Very dark burgundy
 ] as const;
 
 export const ACCENT_COLORS = [
-  "#7C4DFF",  // Deep purple
-  "#E91E8C",  // Hot pink (viral reference)
-  "#E040FB",  // Magenta (Short duration)
-  "#AA00FF",  // Deep orchid (Long duration, emphasis)
-  "#880E4F",  // Dark magenta (error)
-  "#FF6FD8",  // Bright pink
+  "#FF004C",  // Hot pink/red - highlight, outliers, anomalies
+  "#4D1C2D",  // Very dark burgundy - text, alternative to black
 ] as const;
 
 export const CHART_NEUTRALS = {
   background: "#F8F9FA",
   grid: "#E9ECEF",
-  text: "#212529",
+  text: "#4D1C2D",  // Dark burgundy text
 } as const;
 
 // All allowed chart colors from PALLETE.md (purple-pink palette + accents + neutrals)
@@ -78,68 +71,69 @@ export const CHART_CHROME = {
   tooltipBorder: CHART_NEUTRALS.grid,
   tooltipText: CHART_NEUTRALS.text,
   markerStroke: CHART_NEUTRALS.background,
-  reference: ACCENT_COLORS[1],  // #E91E8C - Viral reference
-  emphasis: ACCENT_COLORS[3],   // #AA00FF - Emphasis/hover
-  error: ACCENT_COLORS[4],      // #880E4F - Error state
+  reference: CHART_NEUTRALS.text,      // Regular reference line
+  emphasis: ACCENT_COLORS[0],          // #FF004C - Hot pink for emphasis/hover/outliers
+  error: ACCENT_COLORS[0],             // #FF004C - Hot pink for error state
 } as const;
 
-// Warm gradient: white → light pink → hot pink
+// Heatmap gradient: white → light peachy → deep burgundy (warm gradient)
+// Uses first and last color from PASTEL_COLORS for smooth saturation decrease
 export const HEATMAP_COLORSCALE: [number, string][] = [
   [0, "#ffffff"],
-  [0.5, "#FF80AB"],  // PASTEL_COLORS[2]
-  [1, "#E91E8C"],    // ACCENT_COLORS[1]
+  [0.33, "#FFBB94"],  // PASTEL_COLORS[0] - Light peachy
+  [0.66, "#DC586D"],  // PASTEL_COLORS[2] - Medium rose-pink
+  [1, "#73293A"],     // PASTEL_COLORS[5] - Very dark burgundy
 ];
 
+// Short-form heatmap: white → peachy-pink palette with gradual saturation
 export const SHORT_FORM_HEATMAP_COLORSCALE: [number, string][] = [
   [0, "#ffffff"],
-  [0.12, "#D5AAFF"],
-  [0.25, "#C77DFF"],
-  [0.38, "#B39DDB"],
-  [0.5, "#FF80AB"],
-  [0.62, "#FF8DC7"],
-  [0.75, "#FF6FD8"],
-  [0.88, "#E040FB"],
-  [1, "#E91E8C"],
+  [0.15, "#FFBB94"],  // PASTEL_COLORS[0]
+  [0.30, "#FB9590"],  // PASTEL_COLORS[1]
+  [0.45, "#DC586D"],  // PASTEL_COLORS[2]
+  [0.60, "#D44673"],  // PASTEL_COLORS[3]
+  [0.75, "#B3546A"],  // PASTEL_COLORS[4]
+  [1, "#73293A"],     // PASTEL_COLORS[5]
 ];
 
-// Cool gradient: white → lavender → deep purple
+// Alternative heatmap (same as heatmap): white → burgundy gradient
 export const BLUE_HEATMAP_COLORSCALE: [number, string][] = [
   [0, "#ffffff"],
-  [0.5, "#B39DDB"],  // PASTEL_COLORS[3]
-  [1, "#7C4DFF"],    // ACCENT_COLORS[0]
+  [0.33, "#FFBB94"],  // PASTEL_COLORS[0]
+  [0.66, "#DC586D"],  // PASTEL_COLORS[2]
+  [1, "#73293A"],     // PASTEL_COLORS[5]
 ];
 
 export const TAROT_HEATMAP_COLORSCALE = BLUE_HEATMAP_COLORSCALE;
 export const ENTERTAINMENT_HEATMAP_COLORSCALE = HEATMAP_COLORSCALE;
 
 export const REFERENCE_COLORS = {
-  neutral: CHART_NEUTRALS.text,
-  viral: ACCENT_COLORS[1],      // #E91E8C - Hot pink accent
-  selectedShadow: PASTEL_COLORS[2],  // #FF80AB - Light pink
+  neutral: CHART_NEUTRALS.text,      // Dark text
+  viral: ACCENT_COLORS[0],           // #FF004C - Hot pink for viral/outliers
+  selectedShadow: PASTEL_COLORS[0],  // #FFBB94 - Light peachy
 } as const;
 
 // ── Category palette ────────────────────────────────────────────────────────
-// Strictly derived from the two PALLETE.md palettes to keep stable category order.
-// Mapping: Comedy→#C77DFF, Kids→#FF80AB, Music→#E040FB, Sports→#FF8DC7,
-//          News→#F48FB1, Education→#D5AAFF, Gaming→#FF6FD8, Vlog→#CE93D8
-// Note: Blue-toned colors avoided in favor of warmer purple-pink tones
+// Strictly derived from the new warm peachy-pink palette.
+// Mapping categories to series colors: Comedy→#FFBB94, Kids→#FB9590, Music→#DC586D,
+// Sports→#D44673, News→#B23E59, Education→#73293A, Gaming→#FF004C (highlight), Vlog→#4D1C2D (dark)
 export const CATEGORY_COLORS: Record<string, string> = {
-  Comedy: PASTEL_COLORS[0],    // #C77DFF - Primary purple
-  Kids: PASTEL_COLORS[2],      // #FF80AB - Playful pink
-  Music: PASTEL_COLORS[1],     // #E040FB - Vibrant magenta
-  Sports: PASTEL_COLORS[8],    // #FF8DC7 - Bright pink (was #B39DDB blue-lavender)
-  News: PASTEL_COLORS[6],      // #F48FB1 - Warm pink (was #9FA8DA blue-purple)
-  Education: PASTEL_COLORS[5], // #D5AAFF - Light purple
-  Gaming: PASTEL_COLORS[4],    // #FF6FD8 - Hot pink
-  Vlog: PASTEL_COLORS[9],      // #CE93D8 - Soft orchid
+  Comedy: PASTEL_COLORS[0],    // #FFBB94 - Light peachy
+  Kids: PASTEL_COLORS[1],      // #FB9590 - Light pink-coral
+  Music: PASTEL_COLORS[2],     // #DC586D - Medium rose-pink
+  Sports: PASTEL_COLORS[3],    // #D44673 - Darker pink
+  News: PASTEL_COLORS[4],      // #B3546A - Deep burgundy
+  Education: PASTEL_COLORS[5], // #73293A - Very dark burgundy
+  Gaming: ACCENT_COLORS[0],    // #FF004C - Hot pink (highlight category)
+  Vlog: ACCENT_COLORS[1],      // #4D1C2D - Dark burgundy
 };
 
-// Duration color mapping: Short→#E040FB (magenta), Medium→#7C4DFF (purple), Long→#AA00FF (orchid)
-// Purple-pink progression: bright magenta (urgency) → deep purple (balanced) → deep orchid (depth)
+// Duration color mapping: Short→light peachy, Medium→medium pink, Long→deep burgundy
+// Progressive intensity: Short (urgent/quick) → Medium (balanced) → Long (deep/sustained)
 export const DURATION_COLORS: Record<string, string> = {
-  Short: ACCENT_COLORS[2],   // #E040FB - Magenta (was #FF1744 red)
-  Medium: ACCENT_COLORS[0],  // #7C4DFF - Deep purple (unchanged)
-  Long: ACCENT_COLORS[3],    // #AA00FF - Deep orchid (was #3D5AFE blue)
+  Short: PASTEL_COLORS[0],   // #FFBB94 - Light peachy (quick view)
+  Medium: PASTEL_COLORS[2],  // #DC586D - Medium rose-pink (balanced)
+  Long: PASTEL_COLORS[5],    // #73293A - Very dark burgundy (sustained)
 };
 
 // ── Label arrays ─────────────────────────────────────────────────────────────

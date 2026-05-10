@@ -16,7 +16,7 @@ export function GenerationProgress({ phase }: GenerationProgressProps) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-[#e5e5e5] bg-[#fafafa] px-4 py-3">
       {phase !== "complete" && (
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#d4d4d8] border-t-[#212121]" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#d4d4d8] border-t-[#4D1C2D]" />
       )}
       {phase === "complete" && (
         <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
@@ -35,7 +35,7 @@ export function GenerationProgress({ phase }: GenerationProgressProps) {
           </svg>
         </div>
       )}
-      <span className="text-sm font-medium text-[#212121]">
+      <span className="text-sm font-medium text-[#4D1C2D]">
         {statusText[phase]}
       </span>
     </div>

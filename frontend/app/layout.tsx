@@ -38,7 +38,7 @@ export default function RootLayout({
       lang="vi"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="h-full overflow-hidden bg-[#ffffff] text-[#212121]" suppressHydrationWarning>
+      <body className="h-full overflow-hidden bg-[#ffffff] text-[#4D1C2D]" suppressHydrationWarning>
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
           <main className="min-h-0 min-w-0 flex-1 overflow-hidden">{children}</main>

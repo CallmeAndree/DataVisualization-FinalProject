@@ -9,15 +9,15 @@
    ============================================================ */
 :root {
   /* Brand & Accent */
-  --cohere-primary: #17171c;       /* Near-black — sidebar, dark CTA */
-  --cohere-deep-green: #003c33;    /* Product band — InsightCard bg */
-  --cohere-dark-navy: #071829;     /* Secondary dark — AI console */
+  --cohere-primary: #4D1C2D;       /* Dark burgundy — sidebar, dark CTA */
+  --cohere-deep-green: #73293A;    /* Deep burgundy — InsightCard bg */
+  --cohere-dark-navy: #73293A;     /* Secondary dark — AI console */
   --cohere-canvas: #ffffff;        /* Default page/card background */
-  --cohere-soft-stone: #eeece7;    /* Warm neutral — filter bar */
-  --cohere-action-blue: #1863dc;   /* Links, active nav, primary actions */
-  --cohere-coral: #ff7759;         /* Tags, chips, warm accents */
+  --cohere-soft-stone: #FFBB94;    /* Warm neutral — filter bar */
+  --cohere-action-blue: #FF004C;   /* Links, active nav, primary actions */
+  --cohere-coral: #FF004C;         /* Tags, chips, warm accents */
   /* Text */
-  --cohere-ink: #212121;           /* Default body text on light bg */
+  --cohere-ink: #4D1C2D;           /* Default body text on light bg */
   --cohere-muted: #93939f;         /* Metadata, labels */
   --cohere-slate: #75758a;         /* Tertiary text */
   /* Borders */
@@ -35,14 +35,14 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --primary: #4D1C2D;
+  --primary-foreground: #ffffff;
+  --secondary: #73293A;
+  --secondary-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: #FF004C;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -55,14 +55,14 @@
   --chart-5: #38bdf8;   /* Vlog — sky */
   --radius: 0.5rem;     /* 8px — Cohere sm radius */
   /* Sidebar uses dark product band */
-  --sidebar: #17171c;
+  --sidebar: #73293A;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #1863dc;
+  --sidebar-primary: #FF004C;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: rgba(255, 0, 76, 0.12);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #4c6ee6;
+  --sidebar-border: rgba(255, 0, 76, 0.2);
+  --sidebar-ring: #FF004C;
 }
 
 @theme inline {

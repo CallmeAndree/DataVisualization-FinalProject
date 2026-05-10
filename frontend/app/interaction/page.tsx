@@ -121,7 +121,7 @@ function InteractionContent() {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs border transition-colors ${selectedCategories.includes(cat) ? "bg-[#003c33] text-white border-[#003c33]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${selectedCategories.includes(cat) ? "bg-[#73293A] text-white border-[#73293A]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
             >
               {labelCategory(cat)}
             </button>

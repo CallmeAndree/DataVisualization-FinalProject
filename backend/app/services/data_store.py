@@ -173,9 +173,10 @@ def get_overview(category: str | None = None) -> dict[str, Any]:
     v, c = _require_loaded()
     
     filtered = v if not category else v[v["channel_category"] == category]
+    filtered_channels = c if not category else c[c["channel_category"] == category]
 
     total_videos = int(len(filtered))
-    total_channels = int(filtered["channel_name"].nunique()) if "channel_name" in filtered.columns else 0
+    total_channels = int(filtered_channels["channel_id"].nunique()) if "channel_id" in filtered_channels.columns else 0
     total_views = int(filtered["view_count"].sum()) if "view_count" in filtered.columns else 0
     short_ratio = (
         float(filtered["is_short_form"].mean()) if "is_short_form" in filtered.columns else 0.0

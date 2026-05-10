@@ -13,7 +13,7 @@ export function FilterBar({ children, onReset }: FilterBarProps) {
   return (
     <div
       className="flex flex-wrap items-center gap-3 px-4 py-3 border-b"
-      style={{ background: "#eeece7", borderColor: "#d9d9dd" }}
+      style={{ background: "#FFFBF6", borderColor: "#f2d0c2" }}
     >
       {children}
       {onReset && (
@@ -22,7 +22,7 @@ export function FilterBar({ children, onReset }: FilterBarProps) {
           onClick={onReset}
           className="ml-auto text-sm font-medium text-white px-4 py-1.5 transition-opacity hover:opacity-80"
           style={{
-            background: "#1863dc",
+            background: "#FF004C",
             borderRadius: 32,
             border: "none",
             cursor: "pointer",

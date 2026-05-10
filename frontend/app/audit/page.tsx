@@ -77,7 +77,7 @@ export default function LogsPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-[#93939f]">
           Nhật ký kiểm duyệt
         </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#212121]">
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#4D1C2D]">
           Nhật ký kiểm duyệt
         </h1>
         <p className="mt-3 max-w-2xl text-[#75758a]">
@@ -117,7 +117,7 @@ export default function LogsPage() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#212121]" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#f2f2f2] border-t-[#4D1C2D]" />
             </div>
           ) : error ? (
             <p className="text-sm text-red-600">{error}</p>

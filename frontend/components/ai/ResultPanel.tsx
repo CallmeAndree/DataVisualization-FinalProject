@@ -27,7 +27,9 @@ interface ResultPanelProps {
   error_message: string | null;
   request_id?: string | null;
   prompt?: string;
+  analysis?: string | null;
   status?: ResultStatus;
+  compactCharts?: boolean;
 }
 
 export function ResultPanel({
@@ -37,7 +39,9 @@ export function ResultPanel({
   error_message,
   request_id = null,
   prompt = "",
+  analysis = null,
   status = "idle",
+  compactCharts = false,
 }: ResultPanelProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -67,6 +71,7 @@ export function ResultPanel({
           title: chartTitle,
           figure_base64: figure,
           prompt,
+          analysis,
           request_id,
         });
       });
@@ -111,16 +116,18 @@ export function ResultPanel({
       )}
 
       {figures.length > 0 && (
-        <div className="space-y-3">
+        <div className={compactCharts ? "max-h-[70vh] space-y-3 overflow-y-auto pr-2" : "space-y-3"}>
           {figures.map((src, i) => (
             <Card key={i}>
               <CardContent className="pt-6">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={`Hình ${i + 1}`}
-                  className="w-full rounded"
-                />
+                <div className={compactCharts ? "overflow-auto rounded border border-[#e5e5e5] bg-white p-2" : undefined}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`Hình ${i + 1}`}
+                    className={compactCharts ? "mx-auto max-h-[60vh] w-auto min-w-full rounded object-contain" : "w-full rounded"}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

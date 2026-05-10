@@ -180,6 +180,7 @@ export type LogDetail = {
   stdout: string | null;
   stderr: string | null;
   figures: string[];
+  chart: string | null;
   execution_time_ms: number | null;
   error_message: string | null;
 };
@@ -190,6 +191,7 @@ export type SaveChartRequest = {
   title: string;
   figure_base64: string;
   prompt: string;
+  analysis: string | null;
   request_id: string | null;
 };
 
@@ -198,6 +200,7 @@ export type SavedChart = {
   title: string;
   figure_base64: string;
   prompt: string;
+  analysis: string | null;
   created_at: string;
   request_id: string | null;
 };
@@ -293,6 +296,11 @@ export const api = {
 
   logDetail: (id: string) => request<LogDetail>(`/api/logs/${encodeURIComponent(id)}`),
 
+  updateLogStatus: (id: string, status: RequestStatus) =>
+    request<LogDetail>(`/api/logs/${encodeURIComponent(id)}/status?status=${encodeURIComponent(status)}`, {
+      method: "PATCH",
+    }),
+ 
   /** @deprecated use logList() instead */
   logs: () => request<LogItem[]>("/api/logs"),
 

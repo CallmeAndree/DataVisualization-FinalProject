@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.services.logger import get_request, list_requests
+from app.services.logger import get_request, list_requests, update_request_status
 
 router = APIRouter()
 
@@ -22,3 +22,18 @@ async def get_log(request_id: str) -> dict:
     row.pop("execution_result_json", None)
     row.pop("data_context_json", None)
     return row
+
+
+@router.patch("/{request_id}/status")
+async def patch_log_status(request_id: str, status: str = Query(...)) -> dict:
+    row = await get_request(request_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy request")
+
+    await update_request_status(request_id, status)
+    updated = await get_request(request_id)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy request")
+    updated.pop("execution_result_json", None)
+    updated.pop("data_context_json", None)
+    return updated

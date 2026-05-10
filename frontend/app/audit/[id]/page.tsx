@@ -70,7 +70,7 @@ export default function LogDetailPage() {
   }
 
   return (
-    <div className="px-10 py-12">
+    <div className="h-full overflow-y-auto px-10 py-12">
       <Button
         variant="ghost"
         onClick={() => router.push("/audit")}
@@ -183,6 +183,11 @@ export default function LogDetailPage() {
               stdout={log.stdout || ""}
               execution_time_ms={log.execution_time_ms}
               error_message={log.error_message}
+              request_id={log.id}
+              prompt={log.prompt}
+              analysis={log.explanation}
+              status={log.status === "completed" ? "completed" : "failed"}
+              compactCharts
             />
           </div>
         )}

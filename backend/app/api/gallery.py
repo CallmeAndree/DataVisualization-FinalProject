@@ -10,6 +10,7 @@ class SaveChartBody(BaseModel):
     title: str = Field(default="")
     figure_base64: str
     prompt: str
+    analysis: str | None = None
     request_id: str | None = None
 
 
@@ -25,6 +26,7 @@ async def save_chart(body: SaveChartBody) -> dict:
         title=title,
         figure_base64=body.figure_base64,
         prompt=body.prompt,
+        analysis=body.analysis,
         request_id=body.request_id,
     )
 

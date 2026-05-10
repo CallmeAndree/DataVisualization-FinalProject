@@ -58,7 +58,12 @@ export default function LogsPage() {
     fetchLogs();
   }, [statusFilter, page]);
 
-  const handleRowClick = (id: string) => {
+  const handleRowClick = (id: string, status: RequestStatus) => {
+    if (status === "pending" || status === "edited") {
+      router.push(`/ai?requestId=${encodeURIComponent(id)}`);
+      return;
+    }
+
     router.push(`/audit/${id}`);
   };
 
@@ -137,7 +142,7 @@ export default function LogsPage() {
                     <TableRow
                       key={log.id}
                       className="cursor-pointer hover:bg-[#f9f9f9]"
-                      onClick={() => handleRowClick(log.id)}
+                      onClick={() => handleRowClick(log.id, log.status as RequestStatus)}
                     >
                       <TableCell className="text-xs text-[#93939f]">
                         {new Date(log.created_at).toLocaleString("vi-VN")}

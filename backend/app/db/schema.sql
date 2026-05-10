@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS saved_charts (
   title TEXT NOT NULL,
   figure_base64 TEXT NOT NULL,
   prompt TEXT NOT NULL,
+  analysis TEXT,
   created_at TEXT NOT NULL,
   request_id TEXT,
   FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL

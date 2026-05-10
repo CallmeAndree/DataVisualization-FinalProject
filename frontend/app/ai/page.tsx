@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ai/ChatInput";
@@ -30,6 +31,8 @@ type ResultState = {
 };
 
 export default function AIWorkspacePage() {
+  const searchParams = useSearchParams();
+  const requestId = searchParams.get("requestId");
   const [request, setRequest] = useState<RequestState | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
   const [lastPrompt, setLastPrompt] = useState("");
@@ -66,6 +69,55 @@ export default function AIWorkspacePage() {
     // Start streaming
     await streaming.startStreaming(prompt);
   };
+
+  useEffect(() => {
+    if (!requestId) {
+      return;
+    }
+
+    const currentRequestId = requestId;
+    let cancelled = false;
+
+    async function restoreRequest() {
+      try {
+        const log = await api.logDetail(currentRequestId);
+        if (cancelled) {
+          return;
+        }
+
+        setLastPrompt(log.prompt);
+        setRequest({
+          id: log.id,
+          ai_code: log.ai_code,
+          edited_code: log.edited_code,
+          explanation: log.explanation ?? "",
+          status: log.status as RequestStatus,
+        });
+
+        if (log.status === "completed" || log.status === "failed") {
+          setResult({
+            figures: log.figures || [],
+            stdout: log.stdout || "",
+            execution_time_ms: log.execution_time_ms,
+            error_message: log.error_message,
+            prompt: log.prompt,
+          });
+        } else {
+          setResult(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.error("Không thể khôi phục request: " + (error as Error).message);
+        }
+      }
+    }
+
+    void restoreRequest();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestId]);
 
   const handleCodeChange = (newCode: string) => {
     if (!request) return;
@@ -121,16 +173,17 @@ export default function AIWorkspacePage() {
     }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!request) return;
 
-    setRequest({ ...request, status: "rejected" });
-    toast.info("Đã từ chối request");
-
-    setTimeout(() => {
-      setRequest(null);
+    try {
+      await api.updateLogStatus(request.id, "rejected");
+      setRequest({ ...request, status: "rejected" });
       setResult(null);
-    }, 1500);
+      toast.info("Đã từ chối request");
+    } catch (error) {
+      toast.error("Lỗi khi cập nhật trạng thái: " + (error as Error).message);
+    }
   };
 
   const isLoading = streaming.isStreaming;
@@ -207,7 +260,11 @@ export default function AIWorkspacePage() {
               <CardTitle>1. Yêu cầu</CardTitle>
             </CardHeader>
             <CardContent>
-              <ChatInput onSubmit={handleSubmit} isLoading={isLoading} />
+              <ChatInput
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                initialPrompt={lastPrompt}
+              />
             </CardContent>
           </Card>
 
@@ -293,6 +350,7 @@ export default function AIWorkspacePage() {
                 error_message={result.error_message}
                 request_id={request?.id ?? null}
                 prompt={result.prompt}
+                analysis={request?.explanation ?? null}
                 status={
                   request?.status === "completed"
                     ? "completed"

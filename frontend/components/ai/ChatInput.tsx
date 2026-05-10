@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -8,10 +8,15 @@ import { Loader2 } from "lucide-react";
 interface ChatInputProps {
   onSubmit: (prompt: string) => void;
   isLoading: boolean;
+  initialPrompt?: string;
 }
 
-export function ChatInput({ onSubmit, isLoading }: ChatInputProps) {
-  const [prompt, setPrompt] = useState("");
+export function ChatInput({ onSubmit, isLoading, initialPrompt = "" }: ChatInputProps) {
+  const [prompt, setPrompt] = useState(initialPrompt);
+
+  useEffect(() => {
+    setPrompt(initialPrompt);
+  }, [initialPrompt]);
 
   const handleSubmit = () => {
     if (prompt.trim() && !isLoading) {

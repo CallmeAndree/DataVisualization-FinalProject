@@ -256,6 +256,11 @@ function GalleryContent() {
                 <p className="text-sm text-[#75758a]">
                   {truncate(chart.prompt, 60)}
                 </p>
+                <p className="text-xs text-[#a1a1aa]">
+                  {chart.analysis
+                    ? truncate(chart.analysis, 80)
+                    : "Chưa có phân tích AI cho chart này"}
+                </p>
               </CardContent>
             </Card>
           ))}
@@ -332,6 +337,14 @@ function GalleryContent() {
                   </p>
                   <p className="mt-1 text-sm text-[#212121]">
                     {viewTarget.prompt}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
+                    Phân tích AI
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#212121]">
+                    {viewTarget.analysis ?? "Chart này được lưu trước khi hệ thống hỗ trợ lưu phân tích AI."}
                   </p>
                 </div>
               </div>

@@ -17,6 +17,7 @@ async def save_chart(
     title: str,
     figure_base64: str,
     prompt: str,
+    analysis: str | None = None,
     request_id: str | None = None,
 ) -> dict[str, Any]:
     chart_id = str(uuid.uuid4())
@@ -25,10 +26,10 @@ async def save_chart(
     async with aiosqlite.connect(settings.DB_PATH) as db:
         await db.execute(
             """
-            INSERT INTO saved_charts (id, title, figure_base64, prompt, created_at, request_id)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO saved_charts (id, title, figure_base64, prompt, analysis, created_at, request_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (chart_id, title, figure_base64, prompt, created_at, request_id),
+            (chart_id, title, figure_base64, prompt, analysis, created_at, request_id),
         )
         await db.commit()
 
@@ -40,7 +41,7 @@ async def list_charts() -> list[dict[str, Any]]:
         db.row_factory = aiosqlite.Row
         async with db.execute(
             """
-            SELECT id, title, figure_base64, prompt, created_at, request_id
+            SELECT id, title, figure_base64, prompt, analysis, created_at, request_id
             FROM saved_charts
             ORDER BY created_at DESC
             """

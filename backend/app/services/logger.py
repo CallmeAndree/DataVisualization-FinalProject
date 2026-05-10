@@ -20,6 +20,11 @@ async def init_db() -> None:
                 "ALTER TABLE requests ADD COLUMN was_edited BOOLEAN DEFAULT 0"
             )
             await db.commit()
+        async with db.execute("PRAGMA table_info(saved_charts)") as cur:
+            saved_chart_cols = {row[1] async for row in cur}
+        if "analysis" not in saved_chart_cols:
+            await db.execute("ALTER TABLE saved_charts ADD COLUMN analysis TEXT")
+            await db.commit()
         async with db.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='requests'"
         ) as cur:
@@ -100,8 +105,8 @@ async def update_request_edit(
 async def update_request_status(request_id: str, status: str) -> None:
     async with aiosqlite.connect(settings.DB_PATH) as db:
         await db.execute(
-            "UPDATE requests SET status = ? WHERE id = ?",
-            (status, request_id),
+            "UPDATE requests SET status = ?, execution_result_json = CASE WHEN ? = 'rejected' THEN NULL ELSE execution_result_json END, error_message = CASE WHEN ? = 'rejected' THEN NULL ELSE error_message END, execution_time_ms = CASE WHEN ? = 'rejected' THEN NULL ELSE execution_time_ms END WHERE id = ?",
+            (status, status, status, status, request_id),
         )
         await db.commit()
 
@@ -164,6 +169,7 @@ async def get_request(request_id: str) -> dict | None:
     # Rename fields to match frontend expectations
     d["prompt"] = d.pop("user_prompt")
     d["explanation"] = d.pop("ai_explanation", None)
+    d["chart"] = d["figures"][0] if d.get("figures") else None
     return d
 
 

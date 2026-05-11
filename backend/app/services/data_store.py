@@ -525,15 +525,14 @@ def get_interaction(
     if duration_group:
         df = df[df["duration_group"] == duration_group]
 
-    local_time = None
-    if "_published_dt" in df.columns:
-        local_time = df["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh")
+    utc_time = df["_published_dt"] if "_published_dt" in df.columns else None
+    local_time = utc_time.dt.tz_convert("Asia/Ho_Chi_Minh") if utc_time is not None else None
 
     e2_heatmap = {"days": DAY_NAMES_VI, "hours": list(range(24)), "z": [[0.0 for _ in range(24)] for _ in range(7)]}
-    if local_time is not None and "view_count" in df.columns:
+    if utc_time is not None and "view_count" in df.columns:
         tmp = pd.DataFrame({
-            "dow": local_time.dt.dayofweek,
-            "hour": local_time.dt.hour,
+            "dow": utc_time.dt.dayofweek,
+            "hour": utc_time.dt.hour,
             "view_count": df["view_count"],
         }).dropna(subset=["dow", "hour"])
         pivot = tmp.pivot_table(index="dow", columns="hour", values="view_count", aggfunc="median", fill_value=0)

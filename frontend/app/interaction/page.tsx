@@ -154,7 +154,7 @@ function InteractionContent() {
         {loading ? <p className={TEXT_COLORS.muted}>Đang tải dữ liệu...</p> : !data || !filteredHeatmap ? <p className={TEXT_COLORS.muted}>Không thể tải dữ liệu. Kiểm tra backend.</p> : (
           <>
             <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2 transition-all duration-500">
-              <ChartCard title="E1: Bản đồ nhiệt lượt xem trung vị theo ngày và giờ" description="Click để lọc theo ngày và giờ">
+              <ChartCard title="D1: Bản đồ nhiệt lượt xem trung vị theo ngày và giờ" description="Click để lọc theo ngày và giờ">
                 <HeatmapPlotly
                   z={filteredHeatmap.z}
                   x={filteredHeatmap.hours.map(String)}
@@ -172,7 +172,7 @@ function InteractionContent() {
                 />
               </ChartCard>
 
-              <ChartCard title="E2: Số lượng video theo giờ đăng" description="Click điểm để lọc theo giờ">
+              <ChartCard title="D2: Số lượng video theo giờ đăng" description="Click điểm để lọc theo giờ">
                 <LineChart
                   data={filteredLineData}
                   xKey="hour"

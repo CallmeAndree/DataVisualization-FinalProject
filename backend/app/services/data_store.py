@@ -15,7 +15,7 @@ _channels: pd.DataFrame | None = None
 
 CATEGORY_ORDER = ["Comedy", "Kids", "Music", "Sports", "News", "Education", "Gaming", "Vlog"]
 DURATION_ORDER = ["Short", "Medium", "Long"]
-DAY_NAMES_VI = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+DAY_NAMES_VI = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"]
 
 
 def _ordered_categories(values: pd.Series | list[Any]) -> list[str]:
@@ -525,12 +525,15 @@ def get_interaction(
     if duration_group:
         df = df[df["duration_group"] == duration_group]
 
+    local_time = None
+    if "_published_dt" in df.columns:
+        local_time = df["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh")
+
     e2_heatmap = {"days": DAY_NAMES_VI, "hours": list(range(24)), "z": [[0.0 for _ in range(24)] for _ in range(7)]}
-    if "_published_dt" in df.columns and "view_count" in df.columns:
-        local = df["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh")
+    if local_time is not None and "view_count" in df.columns:
         tmp = pd.DataFrame({
-            "dow": local.dt.dayofweek,
-            "hour": local.dt.hour,
+            "dow": local_time.dt.dayofweek,
+            "hour": local_time.dt.hour,
             "view_count": df["view_count"],
         }).dropna(subset=["dow", "hour"])
         pivot = tmp.pivot_table(index="dow", columns="hour", values="view_count", aggfunc="median", fill_value=0)
@@ -539,18 +542,15 @@ def get_interaction(
 
     categories_ordered = _ordered_categories(df["channel_category"] if "channel_category" in df.columns else [])
     e1_hour_category_video_count: list[dict[str, Any]] = []
-    if "channel_category" in df.columns:
-        hour_source = df.copy()
-        if "hour_posted" not in hour_source.columns and "_published_dt" in hour_source.columns:
-            hour_source = hour_source.assign(hour_posted=hour_source["_published_dt"].dt.tz_convert("Asia/Ho_Chi_Minh").dt.hour)
-        if "hour_posted" in hour_source.columns:
-            counts = hour_source.groupby(["hour_posted", "channel_category"], dropna=True).size().reset_index(name="count")
-            for hour in range(24):
-                row: dict[str, Any] = {"hour": hour}
-                for cat in categories_ordered:
-                    val = counts.loc[(counts["hour_posted"] == hour) & (counts["channel_category"] == cat), "count"].sum()
-                    row[cat] = int(val)
-                e1_hour_category_video_count.append(row)
+    if "channel_category" in df.columns and local_time is not None:
+        hour_source = df.assign(hour_posted_local=local_time.dt.hour)
+        counts = hour_source.groupby(["hour_posted_local", "channel_category"], dropna=True).size().reset_index(name="count")
+        for hour in range(24):
+            row: dict[str, Any] = {"hour": hour}
+            for cat in categories_ordered:
+                val = counts.loc[(counts["hour_posted_local"] == hour) & (counts["channel_category"] == cat), "count"].sum()
+                row[cat] = int(val)
+            e1_hour_category_video_count.append(row)
 
     return {
         "e1_hour_category_video_count": e1_hour_category_video_count,

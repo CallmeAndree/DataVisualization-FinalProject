@@ -594,7 +594,7 @@ DataVisualization-FinalProject/
 ├── INIT.md                 ← Init tasks & scaffolding
 ├── README.md               ← Quick start guide
 ├── DESIGN.md               ← Design system + color palette details
-├── PALLETE.md              ← Color palette reference
+├── PALETTE.md              ← Color palette reference
 ├── PLAN.md                 ← Implementation plan
 ├── VERIFICATION.md         ← Verification checklist
 ├── Makefile                ← Make commands
@@ -801,7 +801,7 @@ DataVisualization-FinalProject/
 | 3. Rõ ràng và dễ hiểu | Quan trọng | Label đầy đủ, tooltip, unit rõ ràng (K/M/B views) |
 | 4. Tích hợp & liên kết | Quan trọng | Cross-filter giữa các chart, shared filter state |
 | 5. Tương tác & điều hướng | Quan trọng | Plotly hover/zoom, dropdown filter, clickable elements |
-| 6. Thiết kế hấp dẫn | Quan trọng | Dark theme, consistent category colors, smooth animations |
+| 6. Thiết kế hấp dẫn | Quan trọng | Warm light theme, consistent category colors, smooth animations |
 | 7. Phân tích dữ liệu | Rất quan trọng | InsightCard trên mỗi page, trend analysis, correlation |
 | 8. Tích hợp AI | Rất quan trọng | Full HITL flow, Monaco editor, audit logs |
 
@@ -891,7 +891,7 @@ LOG_LEVEL=INFO
 - [ ] KPI cards có số liệu đúng từ dataset thật
 - [ ] Cross-filter hoạt động trên trang Overview (click slice Pie A1 → filter A2, A3)
 - [ ] InsightCard có nội dung ý nghĩa trên **mỗi 6 trang dashboard** (1-1 với 5 RO + Tổng Quan)
-- [ ] Category colors nhất quán trên toàn app theo palette §5.1
+- [ ] Category colors nhất quán trên toàn app theo palette §5.1 và heatmap dùng divergence `#73293A` -> `#FFBB94` -> `#FFFFFF`
 
 ### Phần AI Module ✅
 - [ ] Chat box nhận input, gọi API `/ai/generate`

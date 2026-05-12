@@ -106,7 +106,7 @@ Trạng thái scaffold:
 ## Phase 2 — Frontend foundation
 
 ### 2.1 [frontend/lib/constants.ts](frontend/lib/constants.ts) (NEW)
-- `CATEGORY_COLORS` đúng palette §5.1 (Kids amber, Gaming emerald, Music violet, …).
+- `CATEGORY_COLORS` đúng palette §5.1 với brand red `#FF0051`, orchid `#DA4DFA`, và mapping ổn định theo từng category.
 - `CATEGORIES = ["Kids","Gaming","Music","Comedy","Vlog","News","Education","Sports"]`
 - `SUBSCRIBER_TIERS = ["Mega","Large","Mid"]`
 - `DAY_LABELS = ["Mon","Tue",…,"Sun"]`
@@ -131,7 +131,7 @@ Trạng thái scaffold:
   - `BarChart.tsx` — generic, hỗ trợ horizontal & color-by-key (Chart F2 commercial vs not, fallback cho các bar khác)
   - `TopVideosTable.tsx` (Chart D2 top 15 viral) — **mới**, kết hợp bảng + horizontal bar
 - **Plotly (interactive — bắt buộc dynamic import `ssr:false`):**
-  - `HeatmapPlotly.tsx` (Chart B1 channel×year, E2 dow×hour) — colorscale green
+  - `HeatmapPlotly.tsx` (Chart B1 channel×year, E2 dow×hour) — colorscale `#73293A` -> `#FFBB94` -> `#FFFFFF`
   - `BoxPlotly.tsx` (Chart C1 view by category, E1 engagement by duration×tier)
   - `ScatterPlotly.tsx` (Chart C2 sub vs avg view, D1 view vs lvr suspect log-x)
 - Pattern dynamic import:

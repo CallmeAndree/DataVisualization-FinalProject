@@ -2,40 +2,49 @@
  * frontend/lib/constants.ts
  * Shared constants and formatting helpers — Cohere design system (DESIGN.md).
  *
- * COLOR PALETTE SOURCE: PALLETE.md (enforced as of 2026-05-10)
- * All chart colors use the warm peachy-pink palette from PALLETE.md.
- * UI chrome (backgrounds, grids, text) uses Cohere design tokens for light mode.
+ * COLOR PALETTE SOURCE: PALETTE.md
+ * Charts use two semantic palette families:
+ * - categorical for discrete series/categories
+ * - diverging for continuous intensity / delta / sentiment
+ * UI chrome (backgrounds, grids, text) stays aligned with the current brand.
  */
 
-// ── Chart color palette ──────────────────────────────────────────────────────
-// Strict chart palettes from PALLETE.md. All dashboard charts and AI-generated
-// charts must use only these values for marks, heatmaps, references, and chart
-// chrome colors.
-// Source: PALLETE.md - Warm peachy-pink theme for series colors
-// Series palette: FFBB94 → FB9590 → DC586D → D44673 → B23E59 → 73293A (light → dark)
-export const PASTEL_COLORS = [
-  "#FFBB94",  // Light peachy
-  "#FB9590",  // Light pink-coral
-  "#DC586D",  // Medium rose-pink
-  "#D44673",  // Darker pink
-  "#B3546A",  // Deep burgundy
-  "#73293A",  // Very dark burgundy
+// ── Chart palette system ─────────────────────────────────────────────────────
+export const DIVERGING_PALETTE = [
+  "#73293A",
+  "#A14C5E",
+  "#D97A79",
+  "#FFBB94",
+  "#FFD8BF",
+  "#FFF0E5",
+  "#FFFFFF",
+] as const;
+
+export const CATEGORICAL_PALETTE = [
+  "#FFBB94",
+  "#E85D75",
+  "#FF0051",
+  "#DA4DFA",
+  "#4F46E5",
+  "#0F766E",
+  "#B08900",
+  "#4D1C2D",
 ] as const;
 
 export const ACCENT_COLORS = [
-  "#FF004C",  // Hot pink/red - highlight, outliers, anomalies
-  "#4D1C2D",  // Very dark burgundy - text, alternative to black
+  "#FF004C",
+  "#4D1C2D",
 ] as const;
 
 export const CHART_NEUTRALS = {
-  background: "#F8F9FA",
+  background: "#FFFFFF",
   grid: "#E9ECEF",
-  text: "#4D1C2D",  // Dark burgundy text
+  text: "#4D1C2D",
 } as const;
 
-// All allowed chart colors from PALLETE.md (purple-pink palette + accents + neutrals)
 export const ALLOWED_CHART_COLORS = [
-  ...PASTEL_COLORS,
+  ...DIVERGING_PALETTE,
+  ...CATEGORICAL_PALETTE,
   ...ACCENT_COLORS,
   CHART_NEUTRALS.background,
   CHART_NEUTRALS.grid,
@@ -54,11 +63,16 @@ export function chartColor(color: string | undefined | null, fallback: string): 
   return isAllowedChartColor(color) ? color.toUpperCase() : fallback;
 }
 
-export function chartPaletteColor(index: number): string {
-  return PASTEL_COLORS[index % PASTEL_COLORS.length];
+export function categoricalColor(index: number): string {
+  return CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length];
 }
 
-export const CHART_PALETTE = PASTEL_COLORS;
+// Backward-compatible alias for existing discrete chart components.
+export function chartPaletteColor(index: number): string {
+  return categoricalColor(index);
+}
+
+export const CHART_PALETTE = CATEGORICAL_PALETTE;
 
 export const CHART_CHROME = {
   paper: CHART_NEUTRALS.background,
@@ -71,69 +85,52 @@ export const CHART_CHROME = {
   tooltipBorder: CHART_NEUTRALS.grid,
   tooltipText: CHART_NEUTRALS.text,
   markerStroke: CHART_NEUTRALS.background,
-  reference: CHART_NEUTRALS.text,      // Regular reference line
-  emphasis: ACCENT_COLORS[0],          // #FF004C - Hot pink for emphasis/hover/outliers
-  error: ACCENT_COLORS[0],             // #FF004C - Hot pink for error state
+  reference: CHART_NEUTRALS.text,
+  emphasis: ACCENT_COLORS[0],
+  error: ACCENT_COLORS[0],
 } as const;
 
-// Heatmap gradient: white → light peachy → deep burgundy (warm gradient)
-// Uses first and last color from PASTEL_COLORS for smooth saturation decrease
-export const HEATMAP_COLORSCALE: [number, string][] = [
-  [0, "#ffffff"],
-  [0.33, "#FFBB94"],  // PASTEL_COLORS[0] - Light peachy
-  [0.66, "#DC586D"],  // PASTEL_COLORS[2] - Medium rose-pink
-  [1, "#73293A"],     // PASTEL_COLORS[5] - Very dark burgundy
-];
+export function buildDivergingColorscale(stops?: readonly number[]): [number, string][] {
+  const palette = [
+    DIVERGING_PALETTE[6],
+    DIVERGING_PALETTE[4],
+    DIVERGING_PALETTE[3],
+    DIVERGING_PALETTE[1],
+    DIVERGING_PALETTE[0],
+  ] as const;
+  const normalizedStops = stops ?? [0, 0.2, 0.45, 0.72, 1];
 
-// Short-form heatmap: white → peachy-pink palette with gradual saturation
-export const SHORT_FORM_HEATMAP_COLORSCALE: [number, string][] = [
-  [0, "#ffffff"],
-  [0.15, "#FFBB94"],  // PASTEL_COLORS[0]
-  [0.30, "#FB9590"],  // PASTEL_COLORS[1]
-  [0.45, "#DC586D"],  // PASTEL_COLORS[2]
-  [0.60, "#D44673"],  // PASTEL_COLORS[3]
-  [0.75, "#B3546A"],  // PASTEL_COLORS[4]
-  [1, "#73293A"],     // PASTEL_COLORS[5]
-];
+  return palette.map((color, index) => [normalizedStops[index] ?? 1, color] as [number, string]);
+}
 
-// Alternative heatmap (same as heatmap): white → burgundy gradient
-export const BLUE_HEATMAP_COLORSCALE: [number, string][] = [
-  [0, "#ffffff"],
-  [0.33, "#FFBB94"],  // PASTEL_COLORS[0]
-  [0.66, "#DC586D"],  // PASTEL_COLORS[2]
-  [1, "#73293A"],     // PASTEL_COLORS[5]
-];
-
-export const TAROT_HEATMAP_COLORSCALE = BLUE_HEATMAP_COLORSCALE;
+export const HEATMAP_COLORSCALE: [number, string][] = buildDivergingColorscale();
+export const SHORT_FORM_HEATMAP_COLORSCALE: [number, string][] = buildDivergingColorscale([0, 0.16, 0.4, 0.7, 1]);
+export const BLUE_HEATMAP_COLORSCALE: [number, string][] = HEATMAP_COLORSCALE;
+export const TAROT_HEATMAP_COLORSCALE = HEATMAP_COLORSCALE;
 export const ENTERTAINMENT_HEATMAP_COLORSCALE = HEATMAP_COLORSCALE;
 
 export const REFERENCE_COLORS = {
-  neutral: CHART_NEUTRALS.text,      // Dark text
-  viral: ACCENT_COLORS[0],           // #FF004C - Hot pink for viral/outliers
-  selectedShadow: PASTEL_COLORS[0],  // #FFBB94 - Light peachy
+  neutral: CHART_NEUTRALS.text,
+  viral: ACCENT_COLORS[0],
+  selectedShadow: DIVERGING_PALETTE[0],
 } as const;
 
-// ── Category palette ────────────────────────────────────────────────────────
-// Strictly derived from the new warm peachy-pink palette.
-// Mapping categories to series colors: Comedy→#FFBB94, Kids→#FB9590, Music→#DC586D,
-// Sports→#D44673, News→#B23E59, Education→#73293A, Gaming→#FF004C (highlight), Vlog→#4D1C2D (dark)
+// ── Stable semantic mappings ─────────────────────────────────────────────────
 export const CATEGORY_COLORS: Record<string, string> = {
-  Comedy: PASTEL_COLORS[0],    // #FFBB94 - Light peachy
-  Kids: PASTEL_COLORS[1],      // #FB9590 - Light pink-coral
-  Music: PASTEL_COLORS[2],     // #DC586D - Medium rose-pink
-  Sports: PASTEL_COLORS[3],    // #D44673 - Darker pink
-  News: PASTEL_COLORS[4],      // #B3546A - Deep burgundy
-  Education: PASTEL_COLORS[5], // #73293A - Very dark burgundy
-  Gaming: ACCENT_COLORS[0],    // #FF004C - Hot pink (highlight category)
-  Vlog: ACCENT_COLORS[1],      // #4D1C2D - Dark burgundy
+  Comedy: CATEGORICAL_PALETTE[0],
+  Kids: CATEGORICAL_PALETTE[1],
+  Music: CATEGORICAL_PALETTE[2],
+  Sports: CATEGORICAL_PALETTE[3],
+  News: CATEGORICAL_PALETTE[4],
+  Education: CATEGORICAL_PALETTE[5],
+  Gaming: CATEGORICAL_PALETTE[6],
+  Vlog: CATEGORICAL_PALETTE[7],
 };
 
-// Duration color mapping: Short→light peachy, Medium→medium pink, Long→deep burgundy
-// Progressive intensity: Short (urgent/quick) → Medium (balanced) → Long (deep/sustained)
 export const DURATION_COLORS: Record<string, string> = {
-  Short: PASTEL_COLORS[0],   // #FFBB94 - Light peachy (quick view)
-  Medium: PASTEL_COLORS[2],  // #DC586D - Medium rose-pink (balanced)
-  Long: PASTEL_COLORS[5],    // #73293A - Very dark burgundy (sustained)
+  Short: CATEGORICAL_PALETTE[0],
+  Medium: CATEGORICAL_PALETTE[4],
+  Long: CATEGORICAL_PALETTE[7],
 };
 
 // ── Label arrays ─────────────────────────────────────────────────────────────

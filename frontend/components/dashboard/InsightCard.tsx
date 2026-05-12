@@ -37,7 +37,7 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
         <Button
           onClick={handleClick}
           disabled={isDebouncing}
-          className="bg-[#DC586D] text-white hover:bg-[#e60049] font-medium"
+          className="bg-[#FF0051] text-white hover:bg-[#e00048] font-medium"
         >
           Nhận Insight
         </Button>
@@ -73,7 +73,7 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
           onClick={handleClick}
           disabled={isDebouncing}
           size="sm"
-          className="bg-[#DC586D] text-white hover:bg-[#e60049] font-medium self-start"
+          className="bg-[#FF0051] text-white hover:bg-[#e00048] font-medium self-start"
         >
           Thử lại
         </Button>

@@ -146,8 +146,8 @@ function AnomalyContent() {
                   height={340}
                   showPoints
                   percent
-                  baseline={data.d2_viral_momentum.baseline_all}
-                  baselineLabel="Đường chuẩn viral của toàn bộ tập dữ liệu"
+                  //baseline={data.d2_viral_momentum.baseline_all}
+                  //baselineLabel="Đường chuẩn viral của toàn bộ tập dữ liệu"
                   onOutlierClick={(point) => console.info("Viral momentum point", point)}
                 />
               </ChartCard>

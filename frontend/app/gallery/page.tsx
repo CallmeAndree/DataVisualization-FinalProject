@@ -301,51 +301,60 @@ function GalleryContent() {
         open={viewTarget !== null}
         onOpenChange={(open) => !open && setViewTarget(null)}
       >
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="flex max-h-[90vh] min-h-0 flex-col gap-0 p-0 sm:max-w-4xl">
           {viewTarget && (
             <>
-              <DialogHeader>
-                <DialogTitle>{viewTarget.title}</DialogTitle>
-                <DialogDescription>
-                  Lưu lúc {formatDate(viewTarget.created_at)}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => {
-                    downloadChartPng(viewTarget);
-                    toast.success("Đã tải ảnh PNG");
-                  }}
-                >
-                  <Download className="h-4 w-4" />
-                  Tải PNG
-                </Button>
-              </div>
-              <div className="space-y-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={viewTarget.figure_base64}
-                  alt={viewTarget.title}
-                  className="w-full rounded border"
-                />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
-                    Prompt
-                  </p>
-                  <p className="mt-1 text-sm text-[#4D1C2D]">
-                    {viewTarget.prompt}
-                  </p>
+              <div className="shrink-0 border-b bg-popover px-5 pb-4 pt-5 pr-12 sm:px-6">
+                <DialogHeader className="gap-1">
+                  <DialogTitle className="text-lg leading-tight text-[#4D1C2D]">
+                    {viewTarget.title}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Lưu lúc {formatDate(viewTarget.created_at)}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4 flex justify-start sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      downloadChartPng(viewTarget);
+                      toast.success("Đã tải ảnh PNG");
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                    Tải PNG
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
-                    Phân tích AI
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#4D1C2D]">
-                    {viewTarget.analysis ?? "Chart này được lưu trước khi hệ thống hỗ trợ lưu phân tích AI."}
-                  </p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                <div className="space-y-5">
+                  <section className="rounded-xl border bg-[#f7f5f0] p-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={viewTarget.figure_base64}
+                      alt={viewTarget.title}
+                      className="max-h-none w-full rounded-lg border bg-white object-contain"
+                    />
+                  </section>
+                  <section className="rounded-xl border bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
+                      Prompt
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#4D1C2D]">
+                      {viewTarget.prompt}
+                    </p>
+                  </section>
+                  <section className="rounded-xl border bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#93939f]">
+                      Phân tích AI
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#4D1C2D]">
+                      {viewTarget.analysis ??
+                        "Chart này được lưu trước khi hệ thống hỗ trợ lưu phân tích AI."}
+                    </p>
+                  </section>
                 </div>
               </div>
             </>

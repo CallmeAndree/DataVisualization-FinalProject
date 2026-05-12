@@ -11,6 +11,7 @@ import { LineChart } from "@/components/charts/LineChart";
 import { StackedAreaChart } from "@/components/charts/StackedAreaChart";
 import { CHART_PALETTE, DURATION_COLORS, formatNumber, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
+import { getStaticInsightContent, isDefaultFilterState } from "@/lib/dashboard-insight-utils";
 import { applyFilters } from "@/lib/utils/filterUtils";
 import { calculateKPIs } from "@/lib/utils/kpiUtils";
 
@@ -98,6 +99,12 @@ function OverviewContent() {
 
   const handleGetInsight = async () => {
     if (!rawData || !kpis) return;
+
+    if (isDefaultFilterState(filters)) {
+      setInsight(getStaticInsightContent("overview"));
+      setInsightError("");
+      return;
+    }
 
     setInsightLoading(true);
     setInsightError("");

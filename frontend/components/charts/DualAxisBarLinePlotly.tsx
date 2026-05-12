@@ -6,7 +6,7 @@
 import dynamic from "next/dynamic";
 import type { PlotParams } from "react-plotly.js";
 
-import { chartColor, CHART_CHROME, CHART_PALETTE, REFERENCE_COLORS } from "@/lib/constants";
+import { chartColor, CHART_CHROME, CHART_PALETTE } from "@/lib/constants";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as React.ComponentType<PlotParams>;
 
@@ -32,8 +32,8 @@ export function DualAxisBarLinePlotly({
   lineY,
   barName = "Số video viral",
   lineName = "Tỷ lệ viral",
-  barColor = CHART_PALETTE[2],
-  lineColor = REFERENCE_COLORS.viral,
+  barColor = CHART_PALETTE[0],
+  lineColor = CHART_PALETTE[1],
   xLabel,
   barLabel,
   lineLabel,
@@ -41,8 +41,8 @@ export function DualAxisBarLinePlotly({
   onBarClick,
   selectedBar,
 }: DualAxisBarLinePlotlyProps) {
-  const safeBarColor = chartColor(barColor, CHART_PALETTE[2]);
-  const safeLineColor = chartColor(lineColor, REFERENCE_COLORS.viral);
+  const safeBarColor = chartColor(barColor, CHART_PALETTE[0]);
+  const safeLineColor = chartColor(lineColor, CHART_PALETTE[1]);
   const barOpacity = x.map((value) => (selectedBar ? (value === selectedBar.x ? 1 : 0.45) : 0.82));
   const barLineWidths = x.map((value) => (selectedBar && value === selectedBar.x ? 2.5 : 0));
 
@@ -94,15 +94,24 @@ export function DualAxisBarLinePlotly({
           gridcolor: CHART_CHROME.grid,
           tickfont: { size: 11, color: CHART_CHROME.axis },
           automargin: true,
+          zeroline: true,
+          zerolinecolor: CHART_CHROME.grid,
+          zerolinewidth: 1,
+          rangemode: "tozero",
         },
         yaxis2: {
           title: lineLabel ? { text: lineLabel } : undefined,
           overlaying: "y",
           side: "right",
+          anchor: "x",
           tickformat: ".0%",
           showgrid: false,
           tickfont: { size: 11, color: safeLineColor },
           automargin: true,
+          zeroline: true,
+          zerolinecolor: CHART_CHROME.grid,
+          zerolinewidth: 1,
+          rangemode: "tozero",
         },
       }}
       config={{ responsive: true, displayModeBar: false }}

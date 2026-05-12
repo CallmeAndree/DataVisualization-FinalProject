@@ -294,29 +294,45 @@ function AIWorkspaceContent() {
           )}
         </div>
 
-        {/* Right: Monaco + Result */}
-        <div className="bg-[#17171c] p-10">
-          <Card className="border-zinc-800 bg-zinc-900">
-            <CardHeader>
-              <CardTitle className="text-zinc-100">2. Mã Python</CardTitle>
+{/* Right: Monaco + Result */}
+        <div className="bg-zinc-50 p-5 flex flex-col">
+          <Card className="overflow-hidden rounded-xl border border-zinc-700/50 bg-[#1e1e24] shadow-2xl shadow-black/50">
+            <CardHeader className="border-b border-zinc-800 bg-[#1a1a20] px-4 py-3">
+              <div className="flex items-center gap-3">
+                {/* 3 nút giả lập cửa sổ macOS nhìn rất elegant */}
+                <div className="flex gap-1.5">
+                  <div className="h-3 w-3 rounded-full border border-zinc-600 bg-zinc-700/50" />
+                  <div className="h-3 w-3 rounded-full border border-zinc-600 bg-zinc-700/50" />
+                  <div className="h-3 w-3 rounded-full border border-zinc-600 bg-zinc-700/50" />
+                </div>
+                <CardTitle className="text-sm font-medium text-zinc-400">
+                  2. Mã Python
+                </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent>
+            
+            {/* Chú ý: bỏ padding mặc định của CardContent bằng p-0 để code block tràn viền đẹp hơn */}
+            <CardContent className="p-0">
               {showSkeleton ? (
-                <SkeletonLoader />
+                <div className="p-6">
+                  <SkeletonLoader />
+                </div>
               ) : request ? (
-                <>
-                  <CodeBlock
-                    value={request.edited_code ?? request.ai_code}
-                    onChange={handleCodeChange}
-                    readOnly={request.status === "executing" || streaming.isStreaming}
-                  />
+                <div className="relative">
+                  <div className="p-4">
+                    <CodeBlock
+                      value={request.edited_code ?? request.ai_code}
+                      onChange={handleCodeChange}
+                      readOnly={request.status === "executing" || streaming.isStreaming}
+                    />
+                  </div>
 
                   {showActions && (
-                    <div className="mt-4 flex gap-2">
+                    <div className="border-t border-zinc-800 bg-[#1a1a20] px-4 py-3 flex gap-3">
                       <Button
                         onClick={handleApprove}
                         disabled={request.status === "executing" || streaming.isStreaming}
-                        className="flex-1"
+                        className="flex-1 bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
                       >
                         Duyệt và chạy
                       </Button>
@@ -324,15 +340,20 @@ function AIWorkspaceContent() {
                         onClick={handleReject}
                         variant="outline"
                         disabled={request.status === "executing" || streaming.isStreaming}
+                        className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                       >
                         Từ chối
                       </Button>
                     </div>
                   )}
-                </>
+                </div>
               ) : (
-                <div className="flex h-64 items-center justify-center text-zinc-500">
-                  Nhập yêu cầu bên trái để bắt đầu
+                <div className="flex h-[400px] flex-col items-center justify-center gap-3 text-zinc-500">
+                  {/* Có thể thêm 1 icon nhỏ ở đây cho đỡ trống */}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" className="opacity-50">
+                    <path d="M74.34,85.66a8,8,0,0,1,11.32-11.32l48,48a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32-11.32L116.69,128ZM216,152a8,8,0,0,0-8,8v40H48V56h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,56V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V160A8,8,0,0,0,216,152Zm-24-48h24a8,8,0,0,0,0-16H192a8,8,0,0,0,0,16Z"></path>
+                  </svg>
+                  <span className="text-sm">Nhập yêu cầu bên trái để bắt đầu sinh mã</span>
                 </div>
               )}
             </CardContent>

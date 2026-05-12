@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, DURATION_COLORS, SHORT_FORM_HEATMAP_COLORSCALE, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
+import { getStaticInsightContent, isDefaultFilterState, isDefaultYearRange } from "@/lib/dashboard-insight-utils";
 
 function durationFromSegment(segmentKey: string) {
   return segmentKey === "short" ? "Short" : "Long";
@@ -118,6 +119,12 @@ function ShortFormContent() {
 
   const handleGetInsight = async () => {
     if (!data) return;
+
+    if (isDefaultFilterState(filters) && isDefaultYearRange(yearRange, [2015, 2026])) {
+      setInsight(getStaticInsightContent("short-form"));
+      setInsightError("");
+      return;
+    }
 
     setInsightLoading(true);
     setInsightError("");

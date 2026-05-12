@@ -17,7 +17,7 @@ export function formatStaticInsight(insight: StaticDashboardInsight): string {
   const sections: string[] = [];
 
   if (insight.analysis.length > 0) {
-    sections.push(`Phan tich bieu do:\n${insight.analysis.map((item) => `- ${item}`).join("\n")}`);
+    sections.push(`Phân tích biểu đồ:\n${insight.analysis.map((item) => `- ${item}`).join("\n")}`);
   }
 
   sections.push(`Insight:\n${insight.insight}`);

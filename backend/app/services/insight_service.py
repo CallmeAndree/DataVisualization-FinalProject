@@ -69,15 +69,17 @@ Dữ liệu tóm tắt (đã được lọc):
 {summary_text}{filter_text}
 
 Yêu cầu:
-- Viết 1 đoạn phân tích dữ liệu bằng tiếng Việt, 3-5 câu, khoảng 120-180 từ
-- Nêu rõ phát hiện chính, số liệu minh chứng từ dữ liệu tóm tắt, ý nghĩa/diễn giải, và gợi ý cách đọc dashboard
-- Không chỉ mô tả biểu đồ; hãy giải thích vì sao pattern hoặc điểm nổi bật đó đáng chú ý
-- Chỉ sử dụng các giá trị có trong dữ liệu tóm tắt, không suy đoán ngoài dữ liệu
-- Trả về CHÍNH XÁC insight text dạng văn xuôi, không thêm prefix, markdown, bullet, heading hay JSON
+- Trả về đúng cấu trúc 3 phần theo thứ tự: Phân tích biểu đồ -> Insight -> Action
+- Mỗi phần bắt đầu bằng tiêu đề tương ứng và viết bằng tiếng Việt
+- Phần Phân tích biểu đồ tóm tắt phát hiện chính từ dữ liệu
+- Phần Insight diễn giải ý nghĩa và tín hiệu chiến lược
+- Phần Action đưa ra 1-2 đề xuất thực tế dựa trên dữ liệu
+- Chỉ sử dụng các thông tin đã có trong dữ liệu tóm tắt, không suy đoán ngoài dữ liệu
+- Không thêm Markdown, JSON, hay phần nội dung phụ ngoài 3 phần yêu cầu
 
-Insight:"""
-        print(f"DEBUG - summary_text={summary_text}\n")
-        print(f"DEBUG - filter_text={filter_text}")
+Phân tích biểu đồ:
+Insight:
+Action:"""
 
         return prompt
 

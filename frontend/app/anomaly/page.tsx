@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_COLORS, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
+import { getStaticInsightContent, isDefaultFilterState } from "@/lib/dashboard-insight-utils";
 
 function AnomalyContent() {
   const { filters, updateFilter, clearFilter, clearAllFilters, hasActiveFilters } = useMultiDimensionalFilter();
@@ -63,6 +64,13 @@ function AnomalyContent() {
 
   const handleGetInsight = async () => {
     if (!data) return;
+
+    if (isDefaultFilterState(filters)) {
+      setInsight(getStaticInsightContent("anomaly"));
+      setInsightError("");
+      return;
+    }
+
     setInsightLoading(true);
     setInsightError("");
     try {

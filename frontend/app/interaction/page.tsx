@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_COLORS, ENTERTAINMENT_HEATMAP_COLORSCALE, DURATION_ORDER, DAY_LABELS, labelCategory, labelDuration, formatNumber } from "@/lib/constants";
+import { getStaticInsightContent, isDefaultFilterState } from "@/lib/dashboard-insight-utils";
 import { TEXT_COLORS } from "@/lib/design-tokens";
 
 function InteractionContent() {
@@ -82,6 +83,13 @@ function InteractionContent() {
 
   const handleGetInsight = async () => {
     if (!data) return;
+
+    if (isDefaultFilterState(filters)) {
+      setInsight(getStaticInsightContent("interaction"));
+      setInsightError("");
+      return;
+    }
+
     setInsightLoading(true);
     setInsightError("");
     try {

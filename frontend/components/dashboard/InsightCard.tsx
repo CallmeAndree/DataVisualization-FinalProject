@@ -88,7 +88,7 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
       style={{ background: "#612e3f", border: "1px solid rgba(178,62,89,0.5)" }}
     >
       <span className="text-lg font-bold shrink-0 mt-0.5">ⓘ</span>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         {title && (
           <p
             className="text-sm font-semibold leading-tight"
@@ -97,7 +97,7 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
             {title}
           </p>
         )}
-        <p className="text-sm leading-relaxed opacity-100">{content}</p>
+        <p className="text-sm leading-relaxed opacity-100 whitespace-pre-line">{content}</p>
       </div>
     </div>
   );

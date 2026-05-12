@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, DURATION_COLORS, TAROT_HEATMAP_COLORSCALE, labelCategory, labelDuration, formatPercent } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
+import { getStaticInsightContent, isDefaultFilterState } from "@/lib/dashboard-insight-utils";
 
 type DurationKey = "short" | "medium" | "long";
 
@@ -86,6 +87,13 @@ function ChannelsContent() {
 
   const handleGetInsight = async () => {
     if (!data) return;
+
+    if (isDefaultFilterState(filters)) {
+      setInsight(getStaticInsightContent("channels"));
+      setInsightError("");
+      return;
+    }
+
     setInsightLoading(true);
     setInsightError("");
     try {

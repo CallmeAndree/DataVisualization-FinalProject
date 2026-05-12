@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_COLORS, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
+import { getStaticInsightContent, isDefaultFilterState } from "@/lib/dashboard-insight-utils";
 
 function scaleSizes(values: number[], min = 28, max = 90): number[] {
   const safe = values.map((v) => Math.max(0, v || 0));
@@ -81,6 +82,13 @@ function EconomyContent() {
 
   const handleGetInsight = async () => {
     if (!data) return;
+
+    if (isDefaultFilterState(filters)) {
+      setInsight(getStaticInsightContent("economy"));
+      setInsightError("");
+      return;
+    }
+
     setInsightLoading(true);
     setInsightError("");
     try {

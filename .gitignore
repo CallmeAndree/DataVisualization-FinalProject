@@ -35,7 +35,6 @@ backend/sandbox/*
 !backend/sandbox/.gitkeep
 
 # ===== SQLite DB =====
-*.db
 *.db-journal
 *.sqlite
 *.sqlite3
@@ -51,3 +50,6 @@ Thumbs.db
 logs/
 openspec
 .roo
+
+!logs.db
+!backend/logs.db

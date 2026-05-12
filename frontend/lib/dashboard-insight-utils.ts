@@ -20,7 +20,7 @@ export function formatStaticInsight(insight: StaticDashboardInsight): string {
     sections.push(`Phân tích biểu đồ:\n${insight.analysis.map((item) => `- ${item}`).join("\n")}`);
   }
 
-  sections.push(`Insight:\n${insight.insight}`);
+  sections.push(`Insight:\n- ${insight.insight}`);
 
   if (insight.action && insight.action.length > 0) {
     sections.push(`Action:\n${insight.action.map((item) => `- ${item}`).join("\n")}`);

@@ -71,15 +71,18 @@ Dữ liệu tóm tắt (đã được lọc):
 Yêu cầu:
 - Trả về đúng cấu trúc 3 phần theo thứ tự: Phân tích biểu đồ -> Insight -> Action
 - Mỗi phần bắt đầu bằng tiêu đề tương ứng và viết bằng tiếng Việt
-- Phần Phân tích biểu đồ tóm tắt phát hiện chính từ dữ liệu
-- Phần Insight diễn giải ý nghĩa và tín hiệu chiến lược
-- Phần Action đưa ra 1-2 đề xuất thực tế dựa trên dữ liệu
+- Phần Phân tích biểu đồ phải dùng gạch đầu dòng và tóm tắt phát hiện chính từ dữ liệu
+- Phần Insight phải dùng gạch đầu dòng, diễn giải ý nghĩa và tín hiệu chiến lược
+- Phần Action phải dùng gạch đầu dòng và đưa ra 1-2 đề xuất thực tế
 - Chỉ sử dụng các thông tin đã có trong dữ liệu tóm tắt, không suy đoán ngoài dữ liệu
 - Không thêm Markdown, JSON, hay phần nội dung phụ ngoài 3 phần yêu cầu
 
 Phân tích biểu đồ:
+- 
 Insight:
-Action:"""
+- 
+Action:
+- """
 
         return prompt
 

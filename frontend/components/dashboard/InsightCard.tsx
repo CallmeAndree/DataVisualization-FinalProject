@@ -27,6 +27,39 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
     onGetInsight();
   };
 
+  const parseInsightContent = (text: string) => {
+    const normalized = text.replace(/\r\n/g, "\n");
+    const sectionRegex = /\b(Phân tích biểu đồ:|Insight:|Action:)/gmi;
+    const matches = [...normalized.matchAll(sectionRegex)];
+    if (matches.length === 0) {
+      return [
+        {
+          heading: "",
+          lines: normalized
+            .split(/\n|\s*-\s+/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+        },
+      ];
+    }
+
+    const sections: { heading: string; lines: string[] }[] = [];
+    for (let i = 0; i < matches.length; i += 1) {
+      const currentMatch = matches[i];
+      const nextMatch = matches[i + 1];
+      const start = (currentMatch.index ?? 0) + currentMatch[0].length;
+      const end = nextMatch?.index ?? normalized.length;
+      const bodyText = normalized.slice(start, end).trim();
+      const lines = bodyText
+        .split(/\n|\s*-\s+/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      sections.push({ heading: currentMatch[1].trim(), lines: lines.length ? lines : [""] });
+    }
+
+    return sections;
+  };
+
   // State 1: No insight - show "Get Insight" button
   if (!content && !loading && !error) {
     return (
@@ -81,14 +114,16 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
     );
   }
 
+  const sections = content ? parseInsightContent(content) : [];
+
   // State 4: Display insight
   return (
     <div
-      className="flex gap-3 p-4 rounded-[8px] text-white "
+      className="flex gap-3 p-4 rounded-[8px] text-white"
       style={{ background: "#612e3f", border: "1px solid rgba(178,62,89,0.5)" }}
     >
       <span className="text-lg font-bold shrink-0 mt-0.5">ⓘ</span>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         {title && (
           <p
             className="text-sm font-semibold leading-tight"
@@ -97,7 +132,18 @@ export function InsightCard({ title, content, loading, error, onGetInsight }: In
             {title}
           </p>
         )}
-        <p className="text-sm leading-relaxed opacity-100 whitespace-pre-line">{content}</p>
+        {sections.map((section) => (
+          <div key={section.heading} className="flex flex-col gap-2">
+            {section.heading && (
+              <p className="text-xs uppercase tracking-[0.2em] opacity-80">{section.heading}</p>
+            )}
+            <ul className="list-disc list-inside space-y-1 text-sm leading-relaxed opacity-100">
+              {section.lines.map((line, index) => (
+                <li key={`${section.heading}-${index}`}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -10,6 +10,13 @@ import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ChartCard } from "@/components/charts/ChartCard";
 import { ScatterPlotly } from "@/components/charts/ScatterPlotly";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CATEGORIES, CATEGORY_COLORS, labelCategory } from "@/lib/constants";
 import { TEXT_COLORS } from "@/lib/design-tokens";
 
@@ -46,9 +53,11 @@ function EconomyContent() {
     setInsightError("");
   };
 
-  const toggleCategory = (cat: string) => {
+  const category = filters.category ?? "All";
+
+  const setCategoryFilter = (value: string | null) => {
     updateFilter("channel", null);
-    updateFilter("category", cat);
+    updateFilter("category", value === "All" || value === null ? null : value);
     resetInsight();
   };
 
@@ -100,17 +109,15 @@ function EconomyContent() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <FilterBar onReset={handleReset}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</span>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs border transition-colors ${filters.category === cat ? "bg-[#73293A] text-white border-[#73293A]" : "bg-white text-[#75758a] border-[#d9d9dd]"}`}
-            >
-              {labelCategory(cat)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <label className={`text-sm ${TEXT_COLORS.slate}`}>Danh mục:</label>
+          <Select value={category} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Tất cả</SelectItem>
+              {CATEGORIES.map((cat) => <SelectItem key={cat} value={cat}>{labelCategory(cat)}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </FilterBar>
 
